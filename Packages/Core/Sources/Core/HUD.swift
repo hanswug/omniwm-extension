@@ -24,6 +24,16 @@ public struct HUDMessage: Sendable, Equatable {
         }
     }
 
+    /// Padding auto-applied because only the built-in display is left (PDR §6.5).
+    public static func builtIn(_ name: String) -> HUDMessage {
+        HUDMessage(symbol: "laptopcomputer", text: "\(name) · built-in")
+    }
+
+    /// Padding restored because an external display came back (PDR §6.5).
+    public static func restored(_ name: String) -> HUDMessage {
+        HUDMessage(symbol: "display", text: "\(name) · restored")
+    }
+
     public static let writeFailure = HUDMessage(symbol: "xmark.octagon", text: "Couldn't write OmniWM settings")
     public static let configReloaded = HUDMessage(symbol: "checkmark.circle", text: "Config reloaded")
     public static let configErrorKeptPrevious = HUDMessage(symbol: "xmark.octagon", text: "Config error — kept previous")
