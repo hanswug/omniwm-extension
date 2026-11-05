@@ -66,4 +66,4 @@ log stream --predicate 'subsystem == "com.omniwm.extension"'   # live logs
 - App state: `~/Library/Application Support/com.omniwm.extension/state.json`
 - `omniwmctl`: `/Applications/OmniWM.app/Contents/MacOS/omniwmctl`
 - Signing identity: `OmniWM Extension Self-Signed`
-- Repo: `hanswug/omniwm-extension` (private). Target macOS 27.0.1+.
+- Repo: `hanswug/omniwm-extension` (private). Target macOS 26.0+ (work Mac runs 26.x).

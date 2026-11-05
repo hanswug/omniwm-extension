@@ -3,7 +3,7 @@ name: OmniWMExtension
 options:
   bundleIdPrefix: com.omniwm
   deploymentTarget:
-    macOS: "27.0"
+    macOS: "26.0"
   createIntermediateGroups: true
   generateEmptyDirectories: false
 
@@ -39,6 +39,7 @@ targets:
         CODE_SIGN_IDENTITY: "OmniWM Extension Self-Signed"
         DEVELOPMENT_TEAM: ""
         ENABLE_HARDENED_RUNTIME: YES
+        ARCHS: arm64            # Apple Silicon only (PDR); a 26.x target would otherwise add x86_64
         OTHER_CODE_SIGN_FLAGS: "--timestamp=none"
         COMBINE_HIDPI_IMAGES: YES
         ENABLE_USER_SCRIPT_SANDBOXING: YES

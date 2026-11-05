@@ -6,7 +6,7 @@
 | Bundle ID | `com.omniwm.extension` |
 | Repo | `github.com/hanswug/omniwm-extension` (private) |
 | Owner | Hans (`hanswug`) — sole user, sole approver |
-| Target | macOS 27.0.1+, Apple Silicon, Swift 6 |
+| Target | macOS 26.0+ (lowered from 27.0.1 in 1.0.1 for Hans's work Mac on 26.7.2), Apple Silicon, Swift 6 |
 | Versioning | SemVer, `0.x` per task, `1.0.0` when all tasks ship |
 | Distribution | Self-signed, GitHub Releases, manual updates |
 

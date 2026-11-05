@@ -17,7 +17,7 @@ The spec is [`docs/PDR.md`](docs/PDR.md). Changes are listed in [`CHANGELOG.md`]
 
 ## Requirements
 
-- macOS 27.0.1+ on Apple Silicon.
+- macOS 26.0+ on Apple Silicon.
 - OmniWM at `/Applications/OmniWM.app` with **IPC enabled** (`general.ipcEnabled = true`). Tested with OmniWM 0.7.6 (protocol 19).
 - **Building only:** Xcode 27, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), `gh` for releases.
 
