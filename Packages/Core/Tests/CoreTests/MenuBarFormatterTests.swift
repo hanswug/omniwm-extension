@@ -15,26 +15,26 @@ import Testing
 
     @Test func fullNiriLabel() {
         let model = MenuBarModel(reachable: true, workspaceNumber: 1, displayName: "Code", bordersEnabled: true, layout: .niri, containerCount: 3)
-        #expect(render(model) == "1 - Code | <square> | Niri ●●●○")
+        #expect(render(model) == "1 - Code | <square> | <rectangle.split.3x1> ●●●○")
     }
 
     @Test func noDisplayName() {
         #expect(render(MenuBarModel(reachable: true, workspaceNumber: 2, bordersEnabled: false, layout: .niri, containerCount: 2))
-            == "2 | <square.dashed> | Niri ●●○○")
+            == "2 | <square.dashed> | <rectangle.split.3x1> ●●○○")
     }
 
     @Test(arguments: [(1, "●○○○"), (2, "●●○○"), (3, "●●●○"), (4, "●●●●"), (5, "5/6"), (6, "6/6")])
     func niriCounts(_ count: Int, _ dots: String) {
-        #expect(render(MenuBarModel(reachable: true, workspaceNumber: 1, layout: .niri, containerCount: count)) == "1 | Niri \(dots)")
+        #expect(render(MenuBarModel(reachable: true, workspaceNumber: 1, layout: .niri, containerCount: count)) == "1 | <rectangle.split.3x1> \(dots)")
     }
 
     @Test func unknownCountShowsJustNiri() {
-        #expect(render(MenuBarModel(reachable: true, workspaceNumber: 1, layout: .niri)) == "1 | Niri")
+        #expect(render(MenuBarModel(reachable: true, workspaceNumber: 1, layout: .niri)) == "1 | <rectangle.split.3x1>")
     }
 
     @Test func dwindleHidesDots() {
         #expect(render(MenuBarModel(reachable: true, workspaceNumber: 3, bordersEnabled: true, layout: .dwindle, containerCount: 3))
-            == "3 | <square> | Dwindle")
+            == "3 | <square> | <rectangle.split.2x2>")
     }
 
     @Test func unreachableKeepsBorders() {
@@ -47,14 +47,21 @@ import Testing
         let base = MenuBarModel(reachable: true, workspaceNumber: 1, bordersEnabled: true, layout: .niri, containerCount: 2)
         var fullscreen = base
         fullscreen.focus = .fullscreen
-        #expect(render(fullscreen) == "1 | <square> | Niri ●●○○ | F")
+        #expect(render(fullscreen) == "1 | <square> | <rectangle.split.3x1> ●●○○ | F")
         var full = base
         full.focus = .fullContainer
-        #expect(render(full) == "1 | <square> | Niri ●●○○ | FC")
+        #expect(render(full) == "1 | <square> | <rectangle.split.3x1> ●●○○ | FC")
         var dwindleFullscreen = base
         dwindleFullscreen.layout = .dwindle
         dwindleFullscreen.focus = .fullscreen
-        #expect(render(dwindleFullscreen) == "1 | <square> | Dwindle | F")
+        #expect(render(dwindleFullscreen) == "1 | <square> | <rectangle.split.2x2> | F")
+    }
+
+    @Test func spokenDescription() {
+        let niri = MenuBarModel(reachable: true, workspaceNumber: 1, displayName: "Code", bordersEnabled: true, layout: .niri, containerCount: 2, focus: .fullContainer)
+        #expect(MenuBarFormatter.spokenDescription(niri) == "1 - Code, borders on, Niri ●●○○, FC")
+        let dwindle = MenuBarModel(reachable: true, workspaceNumber: 3, bordersEnabled: false, layout: .dwindle)
+        #expect(MenuBarFormatter.spokenDescription(dwindle) == "3, borders off, Dwindle")
     }
 
     @Test func customDisplayNameDetection() {

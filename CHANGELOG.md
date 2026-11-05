@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Menu bar: the layout segment is an icon instead of text, like OmniWM's layout picker: `rectangle.split.3x1` for Niri (followed by the container dots) and `rectangle.split.2x2` for Dwindle. VoiceOver still reads "Niri" / "Dwindle".
+- The Dwindle layout HUD uses the same `rectangle.split.2x2` icon.
+
 ## [0.7.0] - 2026-11-05
 
 ### Added
