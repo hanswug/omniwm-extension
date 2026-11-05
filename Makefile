@@ -43,7 +43,7 @@ build: check-identity gen
 	rm -rf "$(APP)"
 	ditto "$(BUILT_APP)" "$(APP)"
 	codesign --verify --deep --strict --verbose=1 "$(APP)"
-	@codesign -dv "$(APP)" 2>&1 | tee /dev/stderr | grep -Fq 'Authority=$(IDENTITY)' || { \
+	@codesign -dvv "$(APP)" 2>&1 | tee /dev/stderr | grep -Fq 'Authority=$(IDENTITY)' || { \
 	  echo 'error: app is not signed by "$(IDENTITY)"'; exit 1; }
 	@codesign -dv "$(APP)" 2>&1 | grep -Eq 'flags=.*runtime' || { \
 	  echo 'error: hardened runtime is not enabled'; exit 1; }
