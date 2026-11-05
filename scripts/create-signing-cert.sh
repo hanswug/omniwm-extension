@@ -50,7 +50,8 @@ EOF
 
   # macOS `security import` only understands legacy PKCS#12 encryption (3DES/SHA1),
   # not the AES/PBKDF2 default of OpenSSL 3+.
-  PASS="$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)"
+  # (Not `tr < /dev/urandom | head`: tr dies of SIGPIPE, which pipefail turns into a silent exit.)
+  PASS="$("$OPENSSL" rand -hex 16)"
   "$OPENSSL" pkcs12 -export -name "$IDENTITY" \
     -inkey "$WORK/key.pem" -in "$WORK/cert.pem" -out "$WORK/identity.p12" \
     -certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg sha1 \
