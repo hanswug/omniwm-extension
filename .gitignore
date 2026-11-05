@@ -1,0 +1,16 @@
+# Xcode / SwiftPM
+*.xcodeproj
+xcuserdata/
+DerivedData/
+.build/
+.swiftpm/
+build/
+
+# macOS
+.DS_Store
+
+# Never commit signing material
+*.p12
+*.pem
+*.key
+*.cer
