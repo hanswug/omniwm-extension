@@ -210,7 +210,7 @@ right = 640
 Layout, left to right:
 
 ```
-[icon] 1 - Code  |  ▢  |  Niri ●●●○  |  FC
+[icon] 1 - Code  |  ▢  |  ▥ ●●●○  |  FC
 ```
 
 | Segment | Rule |
@@ -218,7 +218,7 @@ Layout, left to right:
 | icon | Monochrome **template** image derived from the OmniWM icon (adapts to light/dark). Fallback if it isn't legible at 18 pt: SF Symbol `rectangle.split.3x1`. Hans picks at the 0.1.0 review. |
 | workspace | `#` if the workspace has no `displayName`, else `# - displayName`. |
 | borders | SF Symbol `square` when enabled, `square.dashed` when disabled. |
-| layout | `Niri` or `Dwindle`. |
+| layout | SF Symbol `rectangle.split.3x1` for Niri, `rectangle.split.2x2` for Dwindle (like OmniWM's layout picker; changed from text in 0.7.1). VoiceOver reads "Niri" / "Dwindle". |
 | containers | Niri only. Count ≤ 4: filled dots = count, hollow up to 4 (`●●○○`). Count 5 or 6: text `5/6` / `6/6`. Hidden for Dwindle. |
 | focus state | `F` while the focused window is fullscreen, `FC` while it is a full container (§6.8). Hidden otherwise. `F` wins if both apply. Added 2026-11-05. |
 
@@ -272,7 +272,7 @@ Quit                        ⌘Q
 | Config reloaded / error | `checkmark.circle` / `xmark.octagon` | `Config reloaded` / `Config error — kept previous` |
 | Write failure | `xmark.octagon` | `Couldn't write OmniWM settings` |
 | OmniWM fullscreen toggled | `arrow.up.left.and.arrow.down.right` / `arrow.down.right.and.arrow.up.left` | `Fullscreen on` / `Fullscreen off` |
-| OmniWM workspace layout toggled | `rectangle.split.3x1` / `square.split.2x2` | `Niri` / `Dwindle` |
+| OmniWM workspace layout toggled | `rectangle.split.3x1` / `rectangle.split.2x2` | `Niri` / `Dwindle` |
 | OmniWM full container toggled | `rectangle.fill` / `rectangle.split.3x1` | `Full container on` / `Full container off` |
 
 ---

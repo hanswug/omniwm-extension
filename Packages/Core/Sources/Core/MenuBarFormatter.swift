@@ -47,11 +47,11 @@ public enum MenuBarFormatter {
 
         switch model.layout {
         case .niri:
-            var text = "Niri"
-            if let dots = containers(model.containerCount) { text += " \(dots)" }
-            groups.append([.text(text)])
+            var group: [MenuBarPiece] = [.symbol(niriSymbol)]
+            if let dots = containers(model.containerCount) { group.append(.text(" \(dots)")) }
+            groups.append(group)
         case .dwindle:
-            groups.append([.text("Dwindle")])
+            groups.append([.symbol(dwindleSymbol)])
         case nil:
             break
         }
@@ -63,6 +63,26 @@ public enum MenuBarFormatter {
         }
         return groups
     }
+
+    /// Layout icons, like OmniWM's own layout picker (Hans, 2026-11-05).
+    public static let niriSymbol = "rectangle.split.3x1"
+    public static let dwindleSymbol = "rectangle.split.2x2"
+
+    /// The title in words, for VoiceOver (symbols have no text).
+    public static func spokenDescription(_ model: MenuBarModel) -> String {
+        groups(model).map { group in
+            group.map { piece in
+                switch piece {
+                case let .text(text): text.trimmingCharacters(in: .whitespaces)
+                case let .symbol(name): spokenNames[name] ?? name
+                }
+            }.joined(separator: " ")
+        }.joined(separator: ", ")
+    }
+
+    private static let spokenNames = [
+        "square": "borders on", "square.dashed": "borders off", niriSymbol: "Niri", dwindleSymbol: "Dwindle",
+    ]
 
     /// `#`, or `# - displayName` when the workspace has one (PDR §5.1).
     public static func workspaceLabel(number: Int?, displayName: String?) -> String {

@@ -138,7 +138,7 @@ public extension HUDMessage {
     static let fullscreenOn = HUDMessage(symbol: "arrow.up.left.and.arrow.down.right", text: "Fullscreen on")
     static let fullscreenOff = HUDMessage(symbol: "arrow.down.right.and.arrow.up.left", text: "Fullscreen off")
     static let layoutNiri = HUDMessage(symbol: "rectangle.split.3x1", text: "Niri")
-    static let layoutDwindle = HUDMessage(symbol: "square.split.2x2", text: "Dwindle")
+    static let layoutDwindle = HUDMessage(symbol: "rectangle.split.2x2", text: "Dwindle")
     static let fullContainerOn = HUDMessage(symbol: "rectangle.fill", text: "Full container on")
     static let fullContainerOff = HUDMessage(symbol: "rectangle.split.3x1", text: "Full container off")
     static let maskedByOverride = HUDMessage(symbol: "exclamationmark.triangle", text: "Set, but this display overrides it")

@@ -27,7 +27,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     private var lastModel: MenuBarModel?
 
-    /// `[icon] 1 - Code  |  ▢  |  Niri ●●●○  |  FC`
+    /// `[icon] 1 - Code  |  ▢  |  ▥ ●●●○  |  FC`
     func updateTitle() {
         let model = app.menuBarModel
         guard model != lastModel, let button = statusItem.button else { return }
@@ -50,8 +50,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             }
         }
         button.attributedTitle = title
-        Log.app.debug("Menu bar: \(title.string.trimmingCharacters(in: .whitespaces), privacy: .public)")
-        button.setAccessibilityLabel("OmniWM Extension: " + title.string.trimmingCharacters(in: .whitespaces))
+        Log.app.debug("Menu bar: \(MenuBarFormatter.spokenDescription(model), privacy: .public)")
+        button.setAccessibilityLabel("OmniWM Extension: " + MenuBarFormatter.spokenDescription(model))
     }
 
     /// An SF Symbol inline with the text, tinted like the text (template).
