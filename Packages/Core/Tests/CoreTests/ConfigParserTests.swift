@@ -327,4 +327,11 @@ private func onlyError(_ text: String, sourceLocation: SourceLocation = #_source
         #expect(locator.line(arrayTable: "padding", index: 1, key: "fake") == nil)
         #expect(locator.line(arrayTable: "padding", index: 1, key: "name") == 11)
     }
+
+    @Test func handlesCRLF() {
+        let locator = TOMLLineLocator("[hud]\r\nposition = \"x\"\r\n[[padding]]\r\nname = \"a\"\r\n")
+        #expect(locator.line(table: "hud") == 1)
+        #expect(locator.line(table: "hud", key: "position") == 2)
+        #expect(locator.line(arrayTable: "padding", index: 0, key: "name") == 4)
+    }
 }

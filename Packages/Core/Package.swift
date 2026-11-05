@@ -13,6 +13,6 @@ let package = Package(
     ],
     targets: [
         .target(name: "Core", dependencies: [.product(name: "TOMLKit", package: "TOMLKit")]),
-        .testTarget(name: "CoreTests", dependencies: ["Core"]),
+        .testTarget(name: "CoreTests", dependencies: ["Core"], resources: [.copy("Fixtures")]),
     ]
 )
