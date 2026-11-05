@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-04
+
 ### Added
 - Extension config at `${XDG_CONFIG_HOME:-~/.config}/omniwm-extension/config.toml`; the commented default is written on first launch.
 - Config validation per PDR §4.1 with line numbers: presets, HUD settings, hotkey strings, duplicate chords. Unknown keys are warnings; out-of-range `duration_ms` is clamped with a warning.
