@@ -18,11 +18,15 @@ enum AppMain {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
+    private var configController: ConfigController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         Log.app.info("OmniWM Extension \(version, privacy: .public) launched")
-        statusItemController = StatusItemController(paths: .current)
+        let config = ConfigController(url: AppPaths.current.extensionConfigURL)
+        configController = config
+        statusItemController = StatusItemController(config: config)
+        config.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

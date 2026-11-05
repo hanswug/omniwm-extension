@@ -7,10 +7,10 @@ import ServiceManagement
 final class StatusItemController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
-    private let paths: AppPaths
+    private let config: ConfigController
 
-    init(paths: AppPaths) {
-        self.paths = paths
+    init(config: ConfigController) {
+        self.config = config
         super.init()
         statusItem.button?.image = Self.menuBarIcon()
         statusItem.button?.toolTip = "OmniWM Extension"
@@ -38,7 +38,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
+        // Warnings section (PDR §5.2). Clicking a config issue opens the file.
+        let issues = config.issues
+        for issue in issues {
+            let row = item("⚠ \(issue)", action: #selector(editConfigFile))
+            row.toolTip = "Open config file"
+            menu.addItem(row)
+        }
+        if !issues.isEmpty { menu.addItem(.separator()) }
+
         menu.addItem(item("Edit config file", action: #selector(editConfigFile)))
+        menu.addItem(item("Reload config", action: #selector(reloadConfig)))
 
         let login = item("Start at login", action: #selector(toggleStartAtLogin))
         login.state = SMAppService.mainApp.status == .enabled ? .on : .off
@@ -58,20 +68,20 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     // MARK: - Actions
 
     @objc private func editConfigFile() {
-        let url = paths.extensionConfigURL
         Task {
             do {
-                // File I/O off the main thread.
-                let created = try await Task.detached { try ConfigPlaceholder.ensureExists(at: url) }.value
-                if created {
-                    Log.config.info("Created empty config placeholder at \(url.path, privacy: .public)")
-                }
-                open(url)
+                try await config.ensureFileExists()
+                open(config.url)
             } catch {
                 Log.config.error("Edit config failed: \(String(describing: error), privacy: .public)")
                 showError("Couldn't open config file", detail: String(describing: error))
             }
         }
+    }
+
+    @objc private func reloadConfig() {
+        Log.config.info("Reload config requested")
+        config.reload(force: true)
     }
 
     private func open(_ url: URL) {
