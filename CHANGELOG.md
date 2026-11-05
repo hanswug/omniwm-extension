@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- HUD per PDR §5.3: a borderless, non-activating, click-through panel at status-bar level that joins all Spaces and shows over full-screen apps, on the screen with the cursor. HUD-material blur, rounded 18 pt, a large SF Symbol over one line of text. Fades in 0.12 s, holds `hud.duration_ms`, fades out 0.25 s, and a new HUD replaces the current one immediately.
+- HUD for every command (preset name, `N containers`, `Borders on/off`, `Dwindle — skipped`, `Couldn't write OmniWM settings`) and for config reloads (`Config reloaded`, `Config error — kept previous`, `Config error — using defaults`). `hud.position` (center/top/bottom) and `hud.enabled` are honoured.
+
+### Changed
+- The menu row for a failed command now appears only while the HUD is disabled.
+
 ## [0.4.0] - 2026-11-05
 
 ### Added
