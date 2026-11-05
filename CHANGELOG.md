@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Display awareness (`general.auto_fullscreen_on_builtin`, PDR §6.5). When docked turns into built-in only, the current `[gaps.outer]` is saved with its exact numbers and the first preset is applied (HUD `<name> · built-in`). When an external display returns, the saved gaps are written back (HUD `<name|Custom> · restored`).
+- Topology changes are debounced 1 s, and nothing happens unless the topology actually changed. A relaunch compares against `state.json` (`lastTopology`, `lastExternalGaps`), so it never overrides a manual choice. With the setting off, the topology is still tracked. The very first run only records.
+
 ## [0.6.0] - 2026-11-05
 
 ### Added
