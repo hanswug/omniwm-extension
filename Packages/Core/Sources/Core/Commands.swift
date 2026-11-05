@@ -48,6 +48,26 @@ public enum CommandResult: Sendable, Equatable {
     case skippedDwindle
 }
 
+/// A finished command: what it did, and whether `settings.toml` was written.
+public struct CommandOutcome: Sendable, Equatable {
+    public let result: CommandResult
+    public let wroteSettings: Bool
+
+    public init(result: CommandResult, wroteSettings: Bool) {
+        self.result = result
+        self.wroteSettings = wroteSettings
+    }
+
+    /// `omniwmctl` arguments to run after the write, if any.
+    ///
+    /// OmniWM reloads `visibleContainerCount` from the file but only re-lays out
+    /// existing columns after a Balance Sizes, so a written count change is followed by one.
+    public var followUp: [String]? {
+        if case .containersSet = result, wroteSettings { return ["command", "balance-sizes"] }
+        return nil
+    }
+}
+
 public enum CommandError: Error, Sendable, Equatable, CustomStringConvertible {
     case noPresets
     case unknownPreset(String)
@@ -108,15 +128,16 @@ public enum CommandPlanner {
     /// If the file changes underneath, the retry re-plans from the new content.
     public static func run(
         _ command: Command, presets: [ExtConfig.PaddingPreset], layout: WorkspaceLayout?, settingsURL: URL
-    ) throws(CommandError) -> CommandResult {
+    ) throws(CommandError) -> CommandOutcome {
         try validate(command, presets: presets)
         if case .visibleContainers = command, layout == .dwindle {
-            return .skippedDwindle // nothing to write, so don't even read the file
+            return CommandOutcome(result: .skippedDwindle, wroteSettings: false) // nothing to write, so don't even read the file
         }
 
         var result: CommandResult?
+        let edit: SettingsEditOutcome
         do throws(SettingsEditError) {
-            try SettingsEditor.edit(fileAt: settingsURL, computing: { text throws(SettingsEditError) in
+            edit = try SettingsEditor.edit(fileAt: settingsURL, computing: { text throws(SettingsEditError) in
                 do throws(CommandError) {
                     let plan = try plan(command, presets: presets, layout: layout, text: text)
                     result = plan.result
@@ -131,7 +152,7 @@ public enum CommandPlanner {
             throw .settings(error)
         }
         guard let result else { throw .settings(.unparseable("no result")) }
-        return result
+        return CommandOutcome(result: result, wroteSettings: edit == .written)
     }
 
     /// Checks that don't depend on the file.

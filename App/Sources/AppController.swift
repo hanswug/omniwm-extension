@@ -52,6 +52,9 @@ final class AppController {
 
     // MARK: - Commands
 
+    /// How long OmniWM gets to live-reload settings.toml before we run a follow-up against it.
+    private static let omniwmReloadDelay: Duration = .milliseconds(300)
+
     /// Runs a command against OmniWM's settings (PDR §6.2–§6.4). Never blocks the main thread.
     func run(_ command: Command) {
         guard let url = settings.url else {
@@ -63,7 +66,7 @@ final class AppController {
         let previous = commandChain
         commandChain = Task { [weak self] in
             await previous?.value
-            let outcome = await Task.detached { () -> Result<CommandResult, CommandError> in
+            let outcome = await Task.detached { () -> Result<CommandOutcome, CommandError> in
                 do throws(CommandError) {
                     return .success(try CommandPlanner.run(command, presets: presets, layout: layout, settingsURL: url))
                 } catch {
@@ -72,9 +75,12 @@ final class AppController {
             }.value
             guard let self else { return }
             switch outcome {
-            case let .success(result):
+            case let .success(outcome):
                 lastCommandError = nil
-                Log.settings.info("\(command.description, privacy: .public) → \(String(describing: result), privacy: .public)")
+                Log.settings.info("\(command.description, privacy: .public) → \(String(describing: outcome.result), privacy: .public)")
+                if let followUp = outcome.followUp {
+                    await runFollowUp(followUp)
+                }
             case let .failure(error):
                 lastCommandError = "Couldn't write OmniWM settings: \(error)"
                 Log.settings.error("\(command.description, privacy: .public) failed: \(error.description, privacy: .public)")
@@ -103,5 +109,29 @@ final class AppController {
         hotkeys.apply(plan.registrations)
         for conflict in plan.conflicts { Log.hotkeys.notice("\(conflict.description, privacy: .public)") }
         for warning in plan.duplicateWarnings { Log.hotkeys.notice("\(warning, privacy: .public)") }
+    }
+
+    /// Runs an `omniwmctl` follow-up (e.g. Balance Sizes after a visible-containers change).
+    /// Failure is logged only: the settings write itself succeeded.
+    private func runFollowUp(_ arguments: [String]) async {
+        let home = paths.homeDirectory
+        let output = await Task.detached { () -> OmniWMCtl.Output? in
+            try? await Task.sleep(for: Self.omniwmReloadDelay)
+            guard let ctl = OmniWMCtl.locate(homeDirectory: home, environment: ProcessInfo.processInfo.environment) else {
+                return nil
+            }
+            return await OmniWMCtl.run(ctl, arguments)
+        }.value
+        let command = arguments.joined(separator: " ")
+        guard let output else {
+            Log.bridge.error("omniwmctl not found; skipped \(command, privacy: .public)")
+            return
+        }
+        if output.succeeded {
+            Log.bridge.info("omniwmctl \(command, privacy: .public) ok")
+        } else {
+            let reason = output.timedOut ? "timed out" : "exit \(output.status): \(output.stderr.trimmingCharacters(in: .whitespacesAndNewlines))"
+            Log.bridge.error("omniwmctl \(command, privacy: .public) failed (\(reason, privacy: .public))")
+        }
     }
 }

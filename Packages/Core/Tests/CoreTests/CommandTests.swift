@@ -160,7 +160,7 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
         let original = try file.bytes
         var names: [String] = []
         for _ in 0..<3 {
-            if case let .paddingSet(name) = try CommandPlanner.run(.cyclePadding, presets: defaults, layout: nil, settingsURL: file.url) {
+            if case let .paddingSet(name) = try CommandPlanner.run(.cyclePadding, presets: defaults, layout: nil, settingsURL: file.url).result {
                 names.append(name)
             }
         }
@@ -183,22 +183,41 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
     @Test func visibleContainersSameValueDoesNotWrite() throws {
         let file = try TempSettings()
         let inode = try FileManager.default.attributesOfItem(atPath: file.url.path)[.systemFileNumber] as? Int
-        #expect(try CommandPlanner.run(.visibleContainers(2), presets: defaults, layout: nil, settingsURL: file.url) == .containersSet(2))
+        let outcome = try CommandPlanner.run(.visibleContainers(2), presets: defaults, layout: nil, settingsURL: file.url)
+        #expect(outcome == CommandOutcome(result: .containersSet(2), wroteSettings: false))
+        #expect(outcome.followUp == nil) // nothing changed → no Balance Sizes
         #expect(try FileManager.default.attributesOfItem(atPath: file.url.path)[.systemFileNumber] as? Int == inode)
     }
 
     @Test func dwindleSkipDoesNotTouchTheFile() throws {
         let file = try TempSettings()
         try FileManager.default.removeItem(at: file.url) // would fail if read
-        #expect(try CommandPlanner.run(.visibleContainers(3), presets: defaults, layout: .dwindle, settingsURL: file.url) == .skippedDwindle)
+        let outcome = try CommandPlanner.run(.visibleContainers(3), presets: defaults, layout: .dwindle, settingsURL: file.url)
+        #expect(outcome == CommandOutcome(result: .skippedDwindle, wroteSettings: false))
+        #expect(outcome.followUp == nil)
+    }
+
+    @Test func visibleContainersChangeIsFollowedByBalanceSizes() throws {
+        let file = try TempSettings()
+        let outcome = try CommandPlanner.run(.visibleContainers(3), presets: defaults, layout: nil, settingsURL: file.url)
+        #expect(outcome == CommandOutcome(result: .containersSet(3), wroteSettings: true))
+        #expect(outcome.followUp == ["command", "balance-sizes"])
+        #expect(try file.text.contains("visibleContainerCount = 3\n"))
+    }
+
+    @Test func otherCommandsHaveNoFollowUp() throws {
+        let file = try TempSettings()
+        #expect(try CommandPlanner.run(.cyclePadding, presets: defaults, layout: nil, settingsURL: file.url).followUp == nil)
+        #expect(try CommandPlanner.run(.toggleBorders, presets: defaults, layout: nil, settingsURL: file.url).followUp == nil)
+        #expect(try CommandPlanner.run(.selectPreset("Wide"), presets: defaults, layout: nil, settingsURL: file.url).followUp == nil)
     }
 
     @Test func toggleBordersTwiceRestoresTheFile() throws {
         let file = try TempSettings()
         let original = try file.bytes
-        #expect(try CommandPlanner.run(.toggleBorders, presets: defaults, layout: nil, settingsURL: file.url) == .bordersSet(enabled: false))
+        #expect(try CommandPlanner.run(.toggleBorders, presets: defaults, layout: nil, settingsURL: file.url).result == .bordersSet(enabled: false))
         #expect(try file.text.contains("[borders]\nenabled = false\n"))
-        #expect(try CommandPlanner.run(.toggleBorders, presets: defaults, layout: nil, settingsURL: file.url) == .bordersSet(enabled: true))
+        #expect(try CommandPlanner.run(.toggleBorders, presets: defaults, layout: nil, settingsURL: file.url).result == .bordersSet(enabled: true))
         #expect(try file.bytes == original)
     }
 
