@@ -48,6 +48,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
         if !warnings.isEmpty { menu.addItem(.separator()) }
 
+        addCommandItems(to: menu)
+        menu.addItem(.separator())
+
         menu.addItem(item("Edit config file", action: #selector(editConfigFile)))
         menu.addItem(item("Reload config", action: #selector(reloadConfig)))
 
@@ -60,6 +63,61 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(item("Quit", action: #selector(quit), key: "q"))
     }
 
+    /// Padding ▸, Visible containers ▸, Borders (PDR §5.2). State comes from OmniWM's settings.toml.
+    private func addCommandItems(to menu: NSMenu) {
+        let settings = app.settings.settings
+        let presets = app.config.config.padding
+
+        // Padding ▸ Cycle, ─, presets, (Custom)
+        let padding = NSMenu()
+        padding.autoenablesItems = false
+        let cycle = item("Cycle", action: #selector(cyclePadding))
+        MenuKeyEquivalent.apply(app.registeredChord(for: .command(.cyclePadding)), to: cycle)
+        padding.addItem(cycle)
+        padding.addItem(.separator())
+        let selection = settings?.outerGaps.map { PresetMatcher.match($0, presets: presets) }
+        for (index, preset) in presets.enumerated() {
+            let row = item(preset.name, action: #selector(selectPreset(_:)))
+            row.representedObject = preset.name
+            row.state = selection == .preset(index) ? .on : .off
+            MenuKeyEquivalent.apply(app.registeredChord(for: .selectPreset(preset.name)), to: row)
+            padding.addItem(row)
+        }
+        if selection == .custom {
+            let custom = NSMenuItem(title: "Custom", action: nil, keyEquivalent: "")
+            custom.state = .on
+            custom.isEnabled = false
+            padding.addItem(custom)
+        }
+        let paddingItem = NSMenuItem(title: "Padding", action: nil, keyEquivalent: "")
+        paddingItem.submenu = padding
+        menu.addItem(paddingItem)
+
+        // Visible containers ▸ 1…6 (stays enabled on Dwindle; choosing behaves like the hotkey).
+        let containers = NSMenu()
+        containers.autoenablesItems = false
+        let commands: [CommandHotkey] = [
+            .visibleContainers1, .visibleContainers2, .visibleContainers3,
+            .visibleContainers4, .visibleContainers5, .visibleContainers6,
+        ]
+        for (offset, command) in commands.enumerated() {
+            let count = offset + 1
+            let row = item("\(count)", action: #selector(setVisibleContainers(_:)))
+            row.tag = count
+            row.state = settings?.visibleContainerCount == count ? .on : .off
+            MenuKeyEquivalent.apply(app.registeredChord(for: .command(command)), to: row)
+            containers.addItem(row)
+        }
+        let containersItem = NSMenuItem(title: "Visible containers", action: nil, keyEquivalent: "")
+        containersItem.submenu = containers
+        menu.addItem(containersItem)
+
+        let borders = item("Borders", action: #selector(toggleBorders))
+        borders.state = settings?.bordersEnabled == true ? .on : .off
+        MenuKeyEquivalent.apply(app.registeredChord(for: .command(.toggleBorders)), to: borders)
+        menu.addItem(borders)
+    }
+
     private func item(_ title: String, action: Selector, key: String = "") -> NSMenuItem {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
         item.target = self
@@ -67,6 +125,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
 
     // MARK: - Actions
+
+    @objc private func cyclePadding() { app.run(.cyclePadding) }
+
+    @objc private func selectPreset(_ sender: NSMenuItem) {
+        guard let name = sender.representedObject as? String else { return }
+        app.run(.selectPreset(name))
+    }
+
+    @objc private func setVisibleContainers(_ sender: NSMenuItem) { app.run(.visibleContainers(sender.tag)) }
+
+    @objc private func toggleBorders() { app.run(.toggleBorders) }
 
     @objc private func editConfigFile() {
         Task {

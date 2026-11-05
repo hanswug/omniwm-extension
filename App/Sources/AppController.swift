@@ -10,6 +10,10 @@ final class AppController {
     private let hotkeys = HotkeyManager()
     private var plan: HotkeyPlan?
     private var hyperIssue: String?
+    /// Commands run one after another, so rapid presses each see the previous result.
+    private var commandChain: Task<Void, Never>?
+    /// Shown in the menu until the next command succeeds (the HUD takes over in 0.5.0).
+    private var lastCommandError: String?
 
     init(paths: AppPaths) {
         self.paths = paths
@@ -17,9 +21,9 @@ final class AppController {
 
         config.onChange = { [weak self] _ in self?.configChanged() }
         settings.onChange = { [weak self] in self?.updateHotkeys() }
-        hotkeys.onPress = { registration in
-            // 0.3.0: log-only stubs. Commands arrive in 0.4.0.
-            Log.hotkeys.info("Hotkey \(registration.hotkey.description, privacy: .public) → \(registration.action.description, privacy: .public) (stub)")
+        hotkeys.onPress = { [weak self] registration in
+            Log.hotkeys.info("Hotkey \(registration.hotkey.description, privacy: .public) → \(registration.action.description, privacy: .public)")
+            self?.run(Command(registration.action))
         }
     }
 
@@ -37,7 +41,46 @@ final class AppController {
             rows += plan.conflicts.map(\.description)
         }
         rows += hotkeys.failures.map { "Couldn't register \($0.hotkey)" }
+        if let lastCommandError { rows.append(lastCommandError) }
         return rows
+    }
+
+    /// The physical chord registered for `action`, for menu key-equivalent hints.
+    func registeredChord(for action: HotkeyAction) -> ResolvedHotkey? {
+        plan?.registrations.first { $0.action == action && !hotkeys.failures.contains($0) }?.resolved
+    }
+
+    // MARK: - Commands
+
+    /// Runs a command against OmniWM's settings (PDR §6.2–§6.4). Never blocks the main thread.
+    func run(_ command: Command) {
+        guard let url = settings.url else {
+            Log.settings.error("\(command.description, privacy: .public): OmniWM settings path not known yet")
+            return
+        }
+        let presets = config.config.padding
+        let layout: WorkspaceLayout? = nil // Unknown until the OmniWM bridge (0.6.0) → apply.
+        let previous = commandChain
+        commandChain = Task { [weak self] in
+            await previous?.value
+            let outcome = await Task.detached { () -> Result<CommandResult, CommandError> in
+                do throws(CommandError) {
+                    return .success(try CommandPlanner.run(command, presets: presets, layout: layout, settingsURL: url))
+                } catch {
+                    return .failure(error)
+                }
+            }.value
+            guard let self else { return }
+            switch outcome {
+            case let .success(result):
+                lastCommandError = nil
+                Log.settings.info("\(command.description, privacy: .public) → \(String(describing: result), privacy: .public)")
+            case let .failure(error):
+                lastCommandError = "Couldn't write OmniWM settings: \(error)"
+                Log.settings.error("\(command.description, privacy: .public) failed: \(error.description, privacy: .public)")
+            }
+            settings.reload() // the watcher would catch it too; this keeps the menu state current sooner
+        }
     }
 
     private func configChanged() {
