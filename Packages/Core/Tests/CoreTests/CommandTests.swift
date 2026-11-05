@@ -212,6 +212,30 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
         #expect(try CommandPlanner.run(.selectPreset("Wide"), presets: defaults, layout: nil, settingsURL: file.url).followUp == nil)
     }
 
+    @Test func restoreCustomGapsExactly() throws {
+        let file = try TempSettings()
+        let gaps = OmniWMSettings.OuterGaps(top: 333.5, bottom: 12, left: 7.25, right: 99)
+        let outcome = try CommandPlanner.run(.restoreGaps(gaps), presets: defaults, layout: nil, settingsURL: file.url)
+        #expect(outcome.result == .paddingSet(name: "Custom"))
+        #expect(try file.text.contains("[gaps.outer]\nbottom = 12.0\nleft = 7.25\nright = 99.0\ntop = 333.5\n"))
+        #expect(outcome.followUp == nil)
+    }
+
+    @Test func restoreGapsNamesMatchingPreset() throws {
+        let file = try TempSettings()
+        let outcome = try CommandPlanner.run(
+            .restoreGaps(.init(top: 720, bottom: 8, left: 640, right: 640)), presets: defaults, layout: nil, settingsURL: file.url
+        )
+        #expect(outcome.result == .paddingSet(name: "Single"))
+    }
+
+    @Test func restoreGapsRejectsInvalidValues() throws {
+        let file = try TempSettings()
+        #expect(throws: CommandError.self) {
+            try CommandPlanner.run(.restoreGaps(.init(top: -1, bottom: 0, left: 0, right: 0)), presets: defaults, layout: nil, settingsURL: file.url)
+        }
+    }
+
     @Test func toggleBordersTwiceRestoresTheFile() throws {
         let file = try TempSettings()
         let original = try file.bytes

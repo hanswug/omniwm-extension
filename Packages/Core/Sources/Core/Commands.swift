@@ -12,6 +12,8 @@ public enum Command: Sendable, Equatable, CustomStringConvertible {
     /// 1…6.
     case visibleContainers(Int)
     case toggleBorders
+    /// Write exact `[gaps.outer]` values back (display awareness, PDR §6.5).
+    case restoreGaps(OmniWMSettings.OuterGaps)
 
     public init(_ action: HotkeyAction) {
         switch action {
@@ -33,6 +35,7 @@ public enum Command: Sendable, Equatable, CustomStringConvertible {
         case let .selectPreset(name): "padding \"\(name)\""
         case let .visibleContainers(count): "\(count) visible containers"
         case .toggleBorders: "toggle borders"
+        case let .restoreGaps(gaps): "restore gaps \(gaps.top)/\(gaps.bottom)/\(gaps.left)/\(gaps.right)"
         }
     }
 }
@@ -118,6 +121,13 @@ public enum CommandPlanner {
             if layout == .dwindle { return ([], .skippedDwindle) }
             return ([SettingsEdit(table: "niri", key: "visibleContainerCount", value: .int(count))], .containersSet(count))
 
+        case let .restoreGaps(gaps):
+            let name = switch PresetMatcher.match(gaps, presets: presets) {
+            case let .preset(index): presets[index].name
+            case .custom: "Custom"
+            }
+            return (gapEdits(top: gaps.top, bottom: gaps.bottom, left: gaps.left, right: gaps.right), .paddingSet(name: name))
+
         case .toggleBorders:
             guard let enabled = settings.bordersEnabled else { throw .settings(.keyNotFound(table: "borders", key: "enabled")) }
             return ([SettingsEdit(table: "borders", key: "enabled", value: .bool(!enabled))], .bordersSet(enabled: !enabled))
@@ -165,17 +175,25 @@ public enum CommandPlanner {
             if !presets.contains(where: { $0.name.lowercased() == name.lowercased() }) { throw .unknownPreset(name) }
         case let .visibleContainers(count):
             if !(1...6).contains(count) { throw .invalidContainerCount(count) }
+        case let .restoreGaps(gaps):
+            for value in [gaps.top, gaps.bottom, gaps.left, gaps.right] where !value.isFinite || value < 0 {
+                throw .settings(.invalidValue("\(value)"))
+            }
         case .toggleBorders:
             break
         }
     }
 
     private static func gapEdits(_ preset: ExtConfig.PaddingPreset) -> [SettingsEdit] {
+        gapEdits(top: preset.top, bottom: preset.bottom, left: preset.left, right: preset.right)
+    }
+
+    private static func gapEdits(top: Double, bottom: Double, left: Double, right: Double) -> [SettingsEdit] {
         [
-            SettingsEdit(table: gapsTable, key: "top", value: .float(preset.top)),
-            SettingsEdit(table: gapsTable, key: "bottom", value: .float(preset.bottom)),
-            SettingsEdit(table: gapsTable, key: "left", value: .float(preset.left)),
-            SettingsEdit(table: gapsTable, key: "right", value: .float(preset.right)),
+            SettingsEdit(table: gapsTable, key: "top", value: .float(top)),
+            SettingsEdit(table: gapsTable, key: "bottom", value: .float(bottom)),
+            SettingsEdit(table: gapsTable, key: "left", value: .float(left)),
+            SettingsEdit(table: gapsTable, key: "right", value: .float(right)),
         ]
     }
 }

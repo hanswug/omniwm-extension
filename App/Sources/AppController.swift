@@ -11,6 +11,7 @@ final class AppController {
     let settings = SettingsController()
     private let hotkeys = HotkeyManager()
     private let hud = HUDController()
+    private let displays = DisplayMonitor()
     let bridge: OmniWMBridge
     /// The status item title should be redrawn (OmniWM state, borders, config).
     var onStatusChange: (() -> Void)?
@@ -30,7 +31,13 @@ final class AppController {
             guard let self else { return }
             configChanged()
             if let message = HUDMessage.forConfig(outcome) { showHUD(message) }
+            // Launch check (PDR §6.5): once config and the settings path are known.
+            if !checkedTopologyAtLaunch {
+                checkedTopologyAtLaunch = true
+                if let topology = DisplayMonitor.currentTopology() { topologyChanged(topology) }
+            }
         }
+        displays.onChange = { [weak self] topology in self?.topologyChanged(topology) }
         settings.onChange = { [weak self] in
             self?.updateHotkeys()
             self?.onStatusChange?()
@@ -49,6 +56,7 @@ final class AppController {
     func start() {
         config.start()
         bridge.start()
+        displays.start()
     }
 
     /// Kills the `omniwmctl` child (PDR §5.2).
@@ -126,9 +134,26 @@ final class AppController {
 
     /// Runs a command against OmniWM's settings (PDR §6.2–§6.4). Never blocks the main thread.
     func run(_ command: Command) {
+        enqueue { [weak self] in
+            await self?.execute(command) { HUDMessage($0) }
+        }
+    }
+
+    /// Commands and display-policy actions run one after another on this chain.
+    private func enqueue(_ work: @escaping @MainActor () async -> Void) {
+        let previous = commandChain
+        commandChain = Task {
+            await previous?.value
+            await work()
+        }
+    }
+
+    /// Runs one command off the main thread, shows its HUD (unless an override masks it), runs any follow-up.
+    @discardableResult
+    private func execute(_ command: Command, hud message: (CommandResult) -> HUDMessage) async -> CommandResult? {
         guard let url = settings.url else {
             Log.settings.error("\(command.description, privacy: .public): OmniWM settings path not known yet")
-            return
+            return nil
         }
         let presets = config.config.padding
         // Time for OmniWM to live-reload settings.toml before a follow-up (config: balance_sizes_delay_ms).
@@ -136,31 +161,91 @@ final class AppController {
         let reloadDelay = Duration.milliseconds(config.config.general.balanceSizesDelayMs)
         // Real Dwindle check (PDR §6.3); unknown when OmniWM isn't reachable → apply.
         let layout: WorkspaceLayout? = bridge.reachable ? bridge.state.currentLayout : nil
-        let previous = commandChain
-        commandChain = Task { [weak self] in
-            await previous?.value
-            let outcome = await Task.detached { () -> Result<CommandOutcome, CommandError> in
-                do throws(CommandError) {
-                    return .success(try CommandPlanner.run(command, presets: presets, layout: layout, settingsURL: url))
+
+        let outcome = await Task.detached { () -> Result<CommandOutcome, CommandError> in
+            do throws(CommandError) {
+                return .success(try CommandPlanner.run(command, presets: presets, layout: layout, settingsURL: url))
+            } catch {
+                return .failure(error)
+            }
+        }.value
+        defer { settings.reload() } // the watcher would catch it too; this keeps the menu state current sooner
+
+        switch outcome {
+        case let .success(outcome):
+            lastCommandError = nil
+            Log.settings.info("\(command.description, privacy: .public) → \(String(describing: outcome.result), privacy: .public)")
+            showHUD(isMaskedByOverride(outcome.result) ? .maskedByOverride : message(outcome.result))
+            if let followUp = outcome.followUp {
+                await runFollowUp(followUp, after: reloadDelay)
+            }
+            return outcome.result
+        case let .failure(error):
+            lastCommandError = "Couldn't write OmniWM settings: \(error)"
+            showHUD(.writeFailure)
+            Log.settings.error("\(command.description, privacy: .public) failed: \(error.description, privacy: .public)")
+            return nil
+        }
+    }
+
+    // MARK: - Display awareness (PDR §6.5)
+
+    /// In memory after the first load of state.json.
+    private var displayState: DisplayState?
+    private var checkedTopologyAtLaunch = false
+
+    /// Queues the §6.5 policy for `topology` (launch check or a debounced screen change).
+    func topologyChanged(_ topology: DisplayTopology) {
+        enqueue { [weak self] in await self?.applyDisplayPolicy(topology) }
+    }
+
+    private func applyDisplayPolicy(_ current: DisplayTopology) async {
+        guard let settingsURL = settings.url else { return }
+        let stateURL = paths.stateURL
+
+        let state: DisplayState
+        if let displayState {
+            state = displayState
+        } else {
+            let loaded = await Task.detached { DisplayStateStore.load(from: stateURL) }.value
+            if let issue = loaded.issue { Log.display.error("\(issue, privacy: .public)") }
+            state = loaded.state
+        }
+        // Fresh read: the exact numbers to save, so Custom round-trips.
+        let gaps = await Task.detached { SettingsReader.load(from: settingsURL).settings?.outerGaps }.value
+        let enabled = config.config.general.autoFullscreenOnBuiltin
+        let decision = DisplayPolicy.decide(state: state, current: current, currentGaps: gaps, enabled: enabled)
+        Log.display.info("Topology \(state.lastTopology?.rawValue ?? "none", privacy: .public) → \(current.rawValue, privacy: .public), enabled=\(enabled): \(String(describing: decision.action), privacy: .public)")
+
+        // Persist before writing gaps, so the saved values survive a crash in between.
+        displayState = decision.state
+        if decision.state != state {
+            let next = decision.state
+            let saved = await Task.detached { () -> String? in
+                do {
+                    try DisplayStateStore.save(next, to: stateURL)
+                    return nil
                 } catch {
-                    return .failure(error)
+                    return error.localizedDescription
                 }
             }.value
-            guard let self else { return }
-            switch outcome {
-            case let .success(outcome):
-                lastCommandError = nil
-                Log.settings.info("\(command.description, privacy: .public) → \(String(describing: outcome.result), privacy: .public)")
-                showHUD(isMaskedByOverride(outcome.result) ? .maskedByOverride : HUDMessage(outcome.result))
-                if let followUp = outcome.followUp {
-                    await runFollowUp(followUp, after: reloadDelay)
-                }
-            case let .failure(error):
-                lastCommandError = "Couldn't write OmniWM settings: \(error)"
-                showHUD(.writeFailure)
-                Log.settings.error("\(command.description, privacy: .public) failed: \(error.description, privacy: .public)")
+            if let saved { Log.display.error("Couldn't save state.json: \(saved, privacy: .public)") }
+        }
+
+        switch decision.action {
+        case .none:
+            break
+        case .applyFirstPreset:
+            guard let first = config.config.padding.first else { return }
+            await execute(.selectPreset(first.name)) { result in
+                if case let .paddingSet(name) = result { return .builtIn(name) }
+                return HUDMessage(result)
             }
-            settings.reload() // the watcher would catch it too; this keeps the menu state current sooner
+        case let .restore(gaps):
+            await execute(.restoreGaps(gaps)) { result in
+                if case let .paddingSet(name) = result { return .restored(name) }
+                return HUDMessage(result)
+            }
         }
     }
 

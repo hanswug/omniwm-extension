@@ -21,6 +21,12 @@ import Testing
         #expect(HUDMessage.configErrorKeptPrevious == .init(symbol: "xmark.octagon", text: "Config error — kept previous"))
     }
 
+    @Test func displayMessagesMatchPDR() {
+        #expect(HUDMessage.builtIn("Fullscreen") == .init(symbol: "laptopcomputer", text: "Fullscreen · built-in"))
+        #expect(HUDMessage.restored("Wide") == .init(symbol: "display", text: "Wide · restored"))
+        #expect(HUDMessage.restored("Custom") == .init(symbol: "display", text: "Custom · restored"))
+    }
+
     @Test func configOutcomes() {
         #expect(HUDMessage.forConfig(.loaded) == nil)       // launch is silent
         #expect(HUDMessage.forConfig(.unchanged) == nil)
