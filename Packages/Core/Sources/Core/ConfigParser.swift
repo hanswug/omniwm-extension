@@ -36,7 +36,7 @@ private struct Validator {
     var issues: [ConfigIssue] = []
 
     private static let rootKeys: Set<String> = ["general", "hud", "hotkeys", "padding"]
-    private static let generalKeys: Set<String> = ["omniwm_settings", "auto_fullscreen_on_builtin"]
+    private static let generalKeys: Set<String> = ["omniwm_settings", "auto_fullscreen_on_builtin", "balance_sizes_delay_ms"]
     private static let hudKeys: Set<String> = ["enabled", "position", "duration_ms"]
     private static let presetKeys: Set<String> = ["name", "top", "bottom", "left", "right", "hotkey"]
 
@@ -73,6 +73,9 @@ private struct Validator {
                 }
             }
             general.autoFullscreenOnBuiltin = bool(table, "general", "auto_fullscreen_on_builtin") ?? general.autoFullscreenOnBuiltin
+            general.balanceSizesDelayMs = milliseconds(
+                table, "general", "balance_sizes_delay_ms", range: ExtConfig.General.balanceSizesDelayRange
+            ) ?? general.balanceSizesDelayMs
         }
 
         var hud = defaults.hud
@@ -80,7 +83,7 @@ private struct Validator {
             warnUnknownKeys(in: table, known: Self.hudKeys, context: "[hud]") { locator.line(table: "hud", key: $0) }
             hud.enabled = bool(table, "hud", "enabled") ?? hud.enabled
             hud.position = position(table) ?? hud.position
-            hud.durationMs = duration(table) ?? hud.durationMs
+            hud.durationMs = milliseconds(table, "hud", "duration_ms", range: ExtConfig.HUD.durationRange) ?? hud.durationMs
         }
 
         // Omitting [hotkeys] or a key inside it = unbound.
@@ -130,18 +133,18 @@ private struct Validator {
         return position
     }
 
-    private mutating func duration(_ table: TOMLTable) -> Int? {
-        let line = locator.line(table: "hud", key: "duration_ms")
-        guard table["duration_ms"] != nil else { return nil }
-        guard let value = number(table["duration_ms"]) else {
-            error("hud.duration_ms must be a number of milliseconds", line)
+    /// A millisecond value: any number, rounded, clamped to `range` with a warning.
+    private mutating func milliseconds(_ table: TOMLTable, _ tableName: String, _ key: String, range: ClosedRange<Int>) -> Int? {
+        let line = locator.line(table: tableName, key: key)
+        guard table[key] != nil else { return nil }
+        guard let value = number(table[key]) else {
+            error("\(tableName).\(key) must be a number of milliseconds", line)
             return nil
         }
-        let range = ExtConfig.HUD.durationRange
         let rounded = value.rounded()
         let clamped = Int(min(max(rounded, Double(range.lowerBound)), Double(range.upperBound)))
         if Double(clamped) != rounded {
-            warning("hud.duration_ms \(Self.format(value)) clamped to \(clamped)", line)
+            warning("\(tableName).\(key) \(Self.format(value)) clamped to \(clamped)", line)
         }
         return clamped
     }

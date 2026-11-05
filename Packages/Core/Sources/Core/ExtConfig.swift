@@ -2,8 +2,12 @@
 public struct ExtConfig: Sendable, Equatable {
     public struct General: Sendable, Equatable {
         /// Path to OmniWM's settings. Empty = auto (see `AppPaths.omniwmSettingsURL`).
+        public static let balanceSizesDelayRange = 0...2000
         public var omniwmSettings: String
         public var autoFullscreenOnBuiltin: Bool
+        /// Wait after writing a visible-containers change before running Balance Sizes,
+        /// so OmniWM has reloaded its settings (PDR §6.3). Always within `balanceSizesDelayRange`.
+        public var balanceSizesDelayMs: Int
     }
 
     public enum HUDPosition: String, Sendable, Equatable, CaseIterable {
@@ -65,7 +69,7 @@ public extension ExtConfig {
         hotkeys[.visibleContainers3] = hotkey("hyper+3")
         hotkeys[.visibleContainers4] = hotkey("hyper+4")
         return ExtConfig(
-            general: General(omniwmSettings: "", autoFullscreenOnBuiltin: true),
+            general: General(omniwmSettings: "", autoFullscreenOnBuiltin: true, balanceSizesDelayMs: 120),
             hud: HUD(enabled: true, position: .center, durationMs: 900),
             hotkeys: hotkeys,
             padding: [
@@ -86,6 +90,9 @@ public extension ExtConfig {
     # On the built-in display alone (no external), switch padding to the first preset.
     # When an external display returns, restore what it had before.
     auto_fullscreen_on_builtin = true
+    # After changing visible containers, wait this long (ms) before telling OmniWM to
+    # Balance Sizes, so it has reloaded its settings first. Raise it if columns don't re-lay out.
+    balance_sizes_delay_ms = 120
 
     [hud]
     enabled = true

@@ -52,9 +52,6 @@ final class AppController {
 
     // MARK: - Commands
 
-    /// How long OmniWM gets to live-reload settings.toml before we run a follow-up against it.
-    /// Measured on OmniWM 0.7.6: it reloads 75–81 ms after our write; 150 ms leaves ~2× margin.
-    private static let omniwmReloadDelay: Duration = .milliseconds(150)
 
     /// Runs a command against OmniWM's settings (PDR §6.2–§6.4). Never blocks the main thread.
     func run(_ command: Command) {
@@ -63,6 +60,9 @@ final class AppController {
             return
         }
         let presets = config.config.padding
+        // Time for OmniWM to live-reload settings.toml before a follow-up (config: balance_sizes_delay_ms).
+        // OmniWM 0.7.6 reloads 75–81 ms after our write.
+        let reloadDelay = Duration.milliseconds(config.config.general.balanceSizesDelayMs)
         let layout: WorkspaceLayout? = nil // Unknown until the OmniWM bridge (0.6.0) → apply.
         let previous = commandChain
         commandChain = Task { [weak self] in
@@ -80,7 +80,7 @@ final class AppController {
                 lastCommandError = nil
                 Log.settings.info("\(command.description, privacy: .public) → \(String(describing: outcome.result), privacy: .public)")
                 if let followUp = outcome.followUp {
-                    await runFollowUp(followUp)
+                    await runFollowUp(followUp, after: reloadDelay)
                 }
             case let .failure(error):
                 lastCommandError = "Couldn't write OmniWM settings: \(error)"
@@ -114,10 +114,10 @@ final class AppController {
 
     /// Runs an `omniwmctl` follow-up (e.g. Balance Sizes after a visible-containers change).
     /// Failure is logged only: the settings write itself succeeded.
-    private func runFollowUp(_ arguments: [String]) async {
+    private func runFollowUp(_ arguments: [String], after delay: Duration) async {
         let home = paths.homeDirectory
         let output = await Task.detached { () -> OmniWMCtl.Output? in
-            try? await Task.sleep(for: Self.omniwmReloadDelay)
+            try? await Task.sleep(for: delay)
             guard let ctl = OmniWMCtl.locate(homeDirectory: home, environment: ProcessInfo.processInfo.environment) else {
                 return nil
             }
