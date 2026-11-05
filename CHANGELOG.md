@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-04
+
 ### Added
 - Menu bar app skeleton (`LSUIElement`, no Dock icon) with a template icon derived from the OmniWM icon.
 - Menu: Edit config file (creates an empty `config.toml` placeholder if missing), Start at login, Restart, Quit.
