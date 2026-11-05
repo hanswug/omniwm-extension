@@ -107,6 +107,12 @@ enum OmniWMFixture {
         guard case .workspaces = try OmniWMParser.parseLine(lines[7]) else { Issue.record("real line after junk"); return }
     }
 
+    @Test func oneBadWindowDoesNotDropTheList() throws {
+        let line = #"{"channel":"windows-changed","kind":"event","ok":true,"result":{"kind":"windows","payload":{"windows":[{"id":"a","isFocused":true,"frame":{"x":"oops"}},{"id":"b","isFocused":false}]}},"status":"success"}"#
+        guard case let .windows(windows) = try OmniWMParser.parseLine(line) else { Issue.record("windows"); return }
+        #expect(windows.map(\.id) == ["b"])
+    }
+
     @Test func transportFailure() throws {
         let message = try #require(try OmniWMFixture.messages("transport-failure.ndjson").first)
         guard case let .failure(code, message) = message else { Issue.record("failure"); return }

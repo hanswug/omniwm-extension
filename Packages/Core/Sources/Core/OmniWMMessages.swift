@@ -181,13 +181,32 @@ public enum OmniWMParser {
             window = try? container.decodeIfPresent(OmniWMWindow.self, forKey: .window)
             workspace = try? container.decodeIfPresent(OmniWMWorkspaceRef.self, forKey: .workspace)
             display = try? container.decodeIfPresent(OmniWMDisplayRef.self, forKey: .display)
-            workspaces = try? container.decodeIfPresent([OmniWMWorkspace].self, forKey: .workspaces)
-            displays = try? container.decodeIfPresent([OmniWMDisplay].self, forKey: .displays)
-            windows = try? container.decodeIfPresent([OmniWMWindow].self, forKey: .windows)
+            workspaces = try? container.decodeIfPresent(LossyArray<OmniWMWorkspace>.self, forKey: .workspaces)?.elements
+            displays = try? container.decodeIfPresent(LossyArray<OmniWMDisplay>.self, forKey: .displays)?.elements
+            windows = try? container.decodeIfPresent(LossyArray<OmniWMWindow>.self, forKey: .windows)?.elements
         }
 
         enum CodingKeys: String, CodingKey {
             case window, workspace, display, workspaces, displays, windows
         }
     }
+}
+
+/// Decodes an array element by element, dropping elements that don't fit,
+/// so one odd window can't blank the whole list.
+private struct LossyArray<Element: Decodable>: Decodable {
+    var elements: [Element] = []
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        while !container.isAtEnd {
+            if let element = try? container.decode(Element.self) {
+                elements.append(element)
+            } else {
+                _ = try? container.decode(Skip.self) // advance past the bad element
+            }
+        }
+    }
+
+    private struct Skip: Decodable {}
 }
