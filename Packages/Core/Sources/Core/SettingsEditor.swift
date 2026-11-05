@@ -54,9 +54,15 @@ public enum SettingsEditError: Error, Sendable, Equatable, CustomStringConvertib
     case notUTF8
     case io(operation: String, path: String, errno: Int32)
     case concurrentModification
+    /// A command needed to read a value that isn't there (e.g. `[borders] enabled` to toggle it).
+    case keyNotFound(table: String, key: String)
+    /// The file isn't valid TOML; we don't edit what OmniWM itself couldn't load.
+    case unparseable(String)
 
     public var description: String {
         switch self {
+        case let .keyNotFound(table, key): "[\(table)] \(key) not found in OmniWM settings"
+        case let .unparseable(reason): "OmniWM settings can't be parsed: \(reason)"
         case let .tableNotFound(table): "table [\(table)] not found in OmniWM settings"
         case let .unexpectedValue(table, key): "[\(table)] \(key) has a non-scalar value; not touching it"
         case let .invalidValue(value): "can't write value \(value)"
@@ -85,18 +91,33 @@ public enum SettingsEditor {
     /// Symlinks are followed, so a symlinked `settings.toml` stays a symlink.
     @discardableResult
     public static func edit(fileAt url: URL, _ edits: [SettingsEdit]) throws(SettingsEditError) -> SettingsEditOutcome {
-        try edit(fileAt: url, edits, beforeRename: { _ in })
+        try edit(fileAt: url, computing: { _ throws(SettingsEditError) in edits }, beforeRename: { _ in })
+    }
+
+    /// Like `edit(fileAt:_:)`, but the edits are computed from the freshly read text
+    /// on every attempt, so a retry after a concurrent change re-decides (e.g. cycling).
+    @discardableResult
+    public static func edit(
+        fileAt url: URL, computing: (String) throws(SettingsEditError) -> [SettingsEdit]
+    ) throws(SettingsEditError) -> SettingsEditOutcome {
+        try edit(fileAt: url, computing: computing, beforeRename: { _ in })
     }
 
     /// Test seam: `beforeRename(attempt)` runs after the temp file is written, before the guard check.
     static func edit(
         fileAt url: URL, _ edits: [SettingsEdit], beforeRename: (Int) -> Void
     ) throws(SettingsEditError) -> SettingsEditOutcome {
+        try edit(fileAt: url, computing: { _ throws(SettingsEditError) in edits }, beforeRename: beforeRename)
+    }
+
+    static func edit(
+        fileAt url: URL, computing: (String) throws(SettingsEditError) -> [SettingsEdit], beforeRename: (Int) -> Void
+    ) throws(SettingsEditError) -> SettingsEditOutcome {
         let target = url.resolvingSymlinksInPath()
         for attempt in 0..<2 {
             let snapshot = try FileSnapshot.read(target)
             guard let text = String(data: snapshot.data, encoding: .utf8) else { throw .notUTF8 }
-            let updated = try apply(edits, to: text)
+            let updated = try apply(try computing(text), to: text)
             if updated == text { return .unchanged }
 
             let temp = try writeTemp(Data(updated.utf8), nextTo: target, mode: snapshot.identity.mode)

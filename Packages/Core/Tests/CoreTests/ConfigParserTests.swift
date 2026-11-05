@@ -32,6 +32,7 @@ private func onlyError(_ text: String, sourceLocation: SourceLocation = #_source
         let config = ExtConfig.builtInDefault
         #expect(config.general.omniwmSettings == "")
         #expect(config.general.autoFullscreenOnBuiltin)
+        #expect(config.general.balanceSizesDelayMs == 120)
         #expect(config.hud == .init(enabled: true, position: .center, durationMs: 900))
         #expect(config.padding.map(\.name) == ["Fullscreen", "Wide", "Single"])
         #expect(config.hotkeys.count == 6) // the six non-empty bindings all parsed
@@ -189,6 +190,28 @@ private func onlyError(_ text: String, sourceLocation: SourceLocation = #_source
     @Test func durationMustBeNumber() throws {
         let issue = try onlyError("[hud]\nduration_ms = \"900\"\n" + onePreset)
         #expect(issue.message == "hud.duration_ms must be a number of milliseconds")
+    }
+
+    @Test(arguments: [(0, 0), (80, 80), (120, 120), (2000, 2000), (5000, 2000), (-5, 0)])
+    func balanceSizesDelayIsClamped(_ input: Int, _ expected: Int) throws {
+        let result = parse("[general]\nbalance_sizes_delay_ms = \(input)\n" + onePreset)
+        #expect(result.config?.general.balanceSizesDelayMs == expected)
+        #expect(result.errors.isEmpty)
+        if input == expected {
+            #expect(result.warnings.isEmpty)
+        } else {
+            #expect(result.warnings.map(\.message) == ["general.balance_sizes_delay_ms \(input) clamped to \(expected)"])
+            #expect(result.warnings.first?.line == 2)
+        }
+    }
+
+    @Test func balanceSizesDelayDefaultsWhenOmitted() throws {
+        #expect(parse(onePreset).config?.general.balanceSizesDelayMs == 120)
+    }
+
+    @Test func balanceSizesDelayMustBeNumber() throws {
+        let issue = try onlyError("[general]\nbalance_sizes_delay_ms = \"slow\"\n" + onePreset)
+        #expect(issue.message == "general.balance_sizes_delay_ms must be a number of milliseconds")
     }
 
     @Test func enabledMustBeBool() throws {

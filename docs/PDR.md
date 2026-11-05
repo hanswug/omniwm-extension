@@ -50,6 +50,7 @@ Verified against omniwm.app docs (Nov 2026). Re-verify anything marked ⚠ again
 | `[[hotkeys]]` entries: `binding = "Control+Option+H"` or `"Unassigned"`. | Used for conflict detection. |
 | `[[monitorGapOverrides]]` and `[[monitorNiriOverrides]]` (can override `visibleContainerCount`) exist per display. | The app writes globals only and warns when an override masks the change (§6.6). |
 | `niri.visibleContainerCount`: integer, app max 6. | Commands 1–6. |
+| A file change to `visibleContainerCount` is reloaded but existing columns only re-lay out after **Balance Sizes** (`omniwmctl command balance-sizes`). Found in 0.4.0 review. | Every written count change is followed by a Balance Sizes (§6.3). |
 | License GPL-2.0. Icon used for a private, personal build. | OK for personal use; do not publish the repo with the icon without revisiting. |
 
 ---
@@ -130,6 +131,9 @@ omniwm_settings = ""
 # On the built-in display alone (no external), switch padding to the first preset.
 # When an external display returns, restore what it had before.
 auto_fullscreen_on_builtin = true
+# After changing visible containers, wait this long (ms) before telling OmniWM to
+# Balance Sizes, so it has reloaded its settings first. Raise it if columns don't re-lay out.
+balance_sizes_delay_ms = 120
 
 [hud]
 enabled = true
@@ -180,6 +184,7 @@ right = 640
 - `padding` must have ≥ 1 entry. Names are unique (case-insensitive) and non-empty. Values are numbers ≥ 0.
 - Per-preset `hotkey` is optional (enables direct selection without the menu; empty by default).
 - `hud.position` ∈ {center, top, bottom}; `duration_ms` clamped to 300–5000.
+- `general.balance_sizes_delay_ms` clamped to 0–2000 (default 120).
 - Hotkey strings: case-insensitive, `+`-separated, exactly one non-modifier key, at least one modifier. Unknown token → error naming the key and token.
 - The same chord bound twice within our config → error.
 - Unknown keys → warning (not error) to tolerate future fields.
@@ -291,6 +296,7 @@ Port the semantics of the existing Perl scripts to Swift, then harden them:
 - **If the current workspace is Dwindle: do nothing, HUD `Dwindle — skipped`.**
 - If OmniWM isn't reachable (layout unknown): apply the change and show the normal HUD.
 - If N already equals the current count: no write, show the HUD anyway (confirmation).
+- After a count change is written, wait `general.balance_sizes_delay_ms` (default 120 ms; OmniWM 0.7.6 reloads ~80 ms after a write) for OmniWM's live reload, then run `omniwmctl command balance-sizes` (resolved per §6.7, 2 s timeout, off the main thread). No write → no Balance Sizes. A failed Balance Sizes is logged; the write itself stands.
 
 ### 6.4 Borders
 - `toggle_borders` flips `[borders] enabled` → HUD.

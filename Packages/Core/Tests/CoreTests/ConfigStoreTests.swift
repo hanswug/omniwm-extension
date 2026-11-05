@@ -28,7 +28,7 @@ private let invalid = valid.replacingOccurrences(of: "position = \"center\"", wi
         #expect(store.config.padding[1].name == "Wider")          // last good still running
         #expect(store.issues.count == 1)
         #expect(store.issues.first?.severity == .error)
-        #expect(store.issues.first?.line == 12)
+        #expect(store.issues.first?.line == 15)
     }
 
     @Test func fixingTheFileClearsTheError() {
