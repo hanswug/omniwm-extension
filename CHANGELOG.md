@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `SettingsEditor`: surgical edits of OmniWM's `settings.toml` per PDR §6.1. It changes only the target value token, inserts a missing key as the first body line, errors on a missing table, writes atomically with permissions preserved, follows symlinks, retries once on concurrent modification, and skips no-op writes. Golden-file tests run on a copy of the real `settings.toml`.
+- `SettingsReader`: borders, outer gaps, visible container count, hyper modifiers, OmniWM hotkeys, monitor overrides and workspace display names. The settings file is watched live.
+- Global hotkeys via Carbon `RegisterEventHotKey` (no permissions needed); `hyper` resolves from `general.hyperKeyModifiers`. Actions are log-only stubs for now.
+- Menu warnings: chords also bound in OmniWM, chords that collide after resolving `hyper`, failed registrations, and unreadable OmniWM settings.
+- `general.omniwm_settings` is honoured (`~/` expanded; relative paths are a config error).
+
+### Fixed
+- Config error line numbers were wrong for files with CRLF line endings.
+
 ## [0.2.0] - 2026-11-04
 
 ### Added
