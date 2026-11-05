@@ -3,7 +3,7 @@
 A small native menu bar app that adds the commands and feedback [OmniWM](https://omniwm.app) is missing for Hans's workflow:
 
 - **Padding presets.** Cycle or select `[gaps.outer]` presets (Fullscreen / Wide / Single, or your own).
-- **Visible containers 1–6.** Writes `[niri] visibleContainerCount`, then tells OmniWM to Balance Sizes.
+- **Visible containers 1–5.** Writes `[niri] visibleContainerCount`, then tells OmniWM to Balance Sizes.
 - **Borders toggle.** Flips `[borders] enabled`.
 - **Live menu bar.** Shows the workspace, borders, a layout icon with container dots, and `F` / `FC`.
 - **HUD** confirming every command, plus OmniWM's own fullscreen, layout and full-container toggles.
@@ -58,7 +58,7 @@ The app is self-signed and not notarized, so removing the quarantine attribute i
   - workspace `#` or `# - Name`;
   - borders `▢` (on) or a dashed square (off);
   - layout icon: three columns for Niri, a 2×2 grid for Dwindle;
-  - visible containers (`●●○○`, or `5/6` / `6/6`; Niri only);
+  - visible containers (`●●○○`, or `5/5`; Niri only);
   - `F` when the focused window is fullscreen, `FC` when it fills the screen as a full container.
 
   When OmniWM isn't reachable, it shows `—` plus the borders segment.
@@ -88,7 +88,6 @@ visible_containers_2 = "hyper+2"
 visible_containers_3 = "hyper+3"
 visible_containers_4 = "hyper+4"
 visible_containers_5 = ""
-visible_containers_6 = ""
 
 [[padding]]                       # order = cycle order; the FIRST is used on the built-in display
 name = "Fullscreen"

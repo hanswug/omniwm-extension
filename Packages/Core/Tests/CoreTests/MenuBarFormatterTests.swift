@@ -23,7 +23,7 @@ import Testing
             == "2 | <square.dashed> | <rectangle.split.3x1> ●●○○")
     }
 
-    @Test(arguments: [(1, "●○○○"), (2, "●●○○"), (3, "●●●○"), (4, "●●●●"), (5, "5/6"), (6, "6/6")])
+    @Test(arguments: [(1, "●○○○"), (2, "●●○○"), (3, "●●●○"), (4, "●●●●"), (5, "5/5")])
     func niriCounts(_ count: Int, _ dots: String) {
         #expect(render(MenuBarModel(reachable: true, workspaceNumber: 1, layout: .niri, containerCount: count)) == "1 | <rectangle.split.3x1> \(dots)")
     }

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- OmniWM allows at most **5** visible containers, not 6 (the PDR was wrong):
+  - commands and the menu go 1–5;
+  - the menu bar shows `5/5` for five;
+  - the default config no longer has `visible_containers_6`. An existing one is ignored when empty and a warning when bound.
+
 ### Added
 - README: install (source and release), signing script, update paths, config reference, how the app touches OmniWM, troubleshooting with `log stream`, development.
 - Stress tests on a copy of the real `settings.toml`:
