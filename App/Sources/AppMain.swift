@@ -19,6 +19,8 @@ enum AppMain {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var appController: AppController?
+    /// SIGTERM (e.g. `make install`, logout) → normal termination, so the omniwmctl child is killed too.
+    private var sigtermSource: DispatchSourceSignal?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
@@ -27,9 +29,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appController = app
         statusItemController = StatusItemController(app: app)
         app.start()
+
+        signal(SIGTERM, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        source.setEventHandler {
+            Log.app.info("SIGTERM received; terminating")
+            NSApp.terminate(nil)
+        }
+        source.resume()
+        sigtermSource = source
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         Log.app.info("OmniWM Extension terminating")
+        appController?.stop()
     }
 }

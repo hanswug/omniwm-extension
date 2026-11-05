@@ -51,6 +51,8 @@ Verified against omniwm.app docs (Nov 2026). Re-verify anything marked ⚠ again
 | `[[monitorGapOverrides]]` and `[[monitorNiriOverrides]]` (can override `visibleContainerCount`) exist per display. | The app writes globals only and warns when an override masks the change (§6.6). |
 | `niri.visibleContainerCount`: integer, app max 6. | Commands 1–6. |
 | A file change to `visibleContainerCount` is reloaded but existing columns only re-lay out after **Balance Sizes** (`omniwmctl command balance-sizes`). Found in 0.4.0 review. | Every written count change is followed by a Balance Sizes (§6.3). |
+| IPC has **no command events** — subscribers only see state (`focus`, `windows-changed` incl. per-window `isFullscreen`, `layout-changed` incl. per-workspace `layout`, `display-changed` incl. `visibleFrame` and `outerGap*`). Verified on 0.7.6 / protocol 19. | OmniWM toggles (fullscreen, workspace layout, full primary span) are detected as state transitions (§6.8). |
+| No IPC field for "container at full primary span". ⚠ | Inferred from the focused window's width vs. the usable width (§6.8). |
 | License GPL-2.0. Icon used for a private, personal build. | OK for personal use; do not publish the repo with the icon without revisiting. |
 
 ---
@@ -208,7 +210,7 @@ right = 640
 Layout, left to right:
 
 ```
-[icon] 1 - Code  |  ▢  |  Niri ●●●○
+[icon] 1 - Code  |  ▢  |  Niri ●●●○  |  FC
 ```
 
 | Segment | Rule |
@@ -218,6 +220,7 @@ Layout, left to right:
 | borders | SF Symbol `square` when enabled, `square.dashed` when disabled. |
 | layout | `Niri` or `Dwindle`. |
 | containers | Niri only. Count ≤ 4: filled dots = count, hollow up to 4 (`●●○○`). Count 5 or 6: text `5/6` / `6/6`. Hidden for Dwindle. |
+| focus state | `F` while the focused window is fullscreen, `FC` while it is a full container (§6.8). Hidden otherwise. `F` wins if both apply. Added 2026-11-05. |
 
 - Separators are literal thin `|` in secondary label color. Use the monospaced-digit system font at menu bar size so the item doesn't jitter in width.
 - **OmniWM not reachable** (not running, IPC disabled, `omniwmctl` missing): `[icon] —`. The borders segment still shows, since it comes from the file.
@@ -268,6 +271,9 @@ Quit                        ⌘Q
 | Masked by override | `exclamationmark.triangle` | `Set, but this display overrides it` |
 | Config reloaded / error | `checkmark.circle` / `xmark.octagon` | `Config reloaded` / `Config error — kept previous` |
 | Write failure | `xmark.octagon` | `Couldn't write OmniWM settings` |
+| OmniWM fullscreen toggled | `arrow.up.left.and.arrow.down.right` / `arrow.down.right.and.arrow.up.left` | `Fullscreen on` / `Fullscreen off` |
+| OmniWM workspace layout toggled | `rectangle.split.3x1` / `square.split.2x2` | `Niri` / `Dwindle` |
+| OmniWM full container toggled | `rectangle.fill` / `rectangle.split.3x1` | `Full container on` / `Full container off` |
 
 ---
 
@@ -322,6 +328,13 @@ Port the semantics of the existing Perl scripts to Swift, then harden them:
 - Child exits (e.g. IPC disabled, OmniWM not installed) → mark unreachable, retry with backoff 1 s → 2 s → 5 s → 10 s (cap), reset on success.
 - Never block the main thread on a child process.
 - **Before writing the parsers, capture real output** from Hans's machine (`subscribe` initial snapshots + one live event per channel, `query workspaces`, `query displays`) into `Packages/Core/Tests/CoreTests/Fixtures/omniwm/`. Parsers are written against these fixtures, not the docs.
+
+### 6.8 OmniWM toggles (added 2026-11-05)
+Hans wants feedback for OmniWM's own `toggle-fullscreen`, `toggle-workspace-layout` and `toggle-container-full-primary-span`, however they are triggered. IPC has no command events, so they are detected from state:
+- **Layout:** the current workspace (same id) changes `layout` → HUD `Niri` / `Dwindle`.
+- **Fullscreen:** the focused window (same id) flips `isFullscreen` → HUD + `F` in the menu bar.
+- **Full container:** on a Niri workspace with **≥ 2 columns**, the focused tiled window's width is at least the usable width (`visibleFrame.width − outerGapLeft − outerGapRight`, 2 pt tolerance). A flip for the same focused window → HUD + `FC` in the menu bar.
+- Never fire on a workspace switch, a focus change, the initial snapshot or a reconnect.
 
 ---
 
@@ -409,10 +422,10 @@ Branch `feat/hud`
 
 ### 0.6.0 — OmniWM bridge & live menu bar
 Branch `feat/omniwm-bridge`
-- Capture fixtures first (§6.7). NDJSON parser, subscription process with reconnect/backoff, `query workspaces`. Menu bar rendering per §5.1. Real Dwindle check for containers (§6.3). Override detection and effective container count (§6.6). Unreachable state.
+- Capture fixtures first (§6.7). NDJSON parser, subscription process with reconnect/backoff, `query workspaces`. Menu bar rendering per §5.1. Real Dwindle check for containers (§6.3). Override detection and effective container count (§6.6). Unreachable state. OmniWM toggle HUDs and `F`/`FC` menu bar state (§6.8, added 2026-11-05).
 
-**AC:** parser tests against the captured fixtures (incl. malformed line, unknown channel). Menu bar formatter tests for every segment (displayName present/absent, Niri 1–6, Dwindle, unreachable).
-**Manual check:** switching workspaces updates the label instantly · `displayName` shows `# - Name` · toggle a workspace to Dwindle → dots disappear; hyper+2 shows "Dwindle — skipped" · quit OmniWM → `—`; relaunch → recovers by itself · turn IPC off/on in OmniWM → same.
+**AC:** parser tests against the captured fixtures (incl. malformed line, unknown channel). Menu bar formatter tests for every segment (displayName present/absent, Niri 1–6, Dwindle, unreachable, F, FC). Toggle detection tests: each toggle fires once; workspace switch, focus change and snapshots don't fire; FC needs ≥ 2 columns.
+**Manual check:** switching workspaces updates the label instantly · `displayName` shows `# - Name` · toggle a workspace to Dwindle → dots disappear; hyper+2 shows "Dwindle — skipped" · quit OmniWM → `—`; relaunch → recovers by itself · turn IPC off/on in OmniWM → same · OmniWM toggle-fullscreen / toggle-workspace-layout / toggle-container-full-primary-span each show their HUD · menu bar shows `F` / `FC` while active · switching workspaces or focus shows no toggle HUD.
 
 ### 0.7.0 — Display awareness
 Branch `feat/display-awareness`

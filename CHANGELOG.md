@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-05
+
+### Added
+- Live menu bar title per PDR §5.1: `1 - Code  |  ▢  |  Niri ●●○○`. It shows the workspace number and custom name, the borders symbol, the layout, and the effective container dots (`5/6` / `6/6`, hidden on Dwindle). When OmniWM isn't reachable it shows `—` and keeps the borders segment, and the menu warns "OmniWM not reachable".
+- OmniWM bridge: a long-lived `omniwmctl subscribe` child process with reconnect backoff 1/2/5/10 s. It's killed on quit, including on SIGTERM. Parsers are written against captured fixtures.
+- OmniWM toggle feedback (PDR §6.8): HUDs for OmniWM's own `toggle-fullscreen` (`Fullscreen on/off`), `toggle-workspace-layout` (`Niri` / `Dwindle`) and `toggle-container-full-primary-span` (`Full container on/off`), however they're triggered. The menu bar shows `F` while the focused window is fullscreen and `FC` while it's a full container. IPC has no command events, and leaving OmniWM fullscreen emits none at all, so the bridge re-queries the focused window after events and also polls it (every 0.5 s while `F`/`FC` is shown, otherwise every 1.5 s).
+- The Dwindle check for visible containers now uses the real layout: `Dwindle — skipped`.
+- Per-display overrides (PDR §6.6): the HUD says `Set, but this display overrides it`, a `ⓘ This display overrides gaps/containers` row appears in the menu, and the dots show the effective count.
+
 ## [0.5.0] - 2026-11-05
 
 ### Added

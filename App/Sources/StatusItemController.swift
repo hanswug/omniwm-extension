@@ -14,10 +14,61 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         self.app = app
         super.init()
         statusItem.button?.image = Self.menuBarIcon()
+        statusItem.button?.imagePosition = .imageLeading
         statusItem.button?.toolTip = "OmniWM Extension"
         menu.delegate = self
         menu.autoenablesItems = false
         statusItem.menu = menu
+        app.onStatusChange = { [weak self] in self?.updateTitle() }
+        updateTitle()
+    }
+
+    // MARK: - Title (PDR §5.1)
+
+    private var lastModel: MenuBarModel?
+
+    /// `[icon] 1 - Code  |  ▢  |  Niri ●●●○  |  FC`
+    func updateTitle() {
+        let model = app.menuBarModel
+        guard model != lastModel, let button = statusItem.button else { return }
+        lastModel = model
+
+        let font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        let text: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor, .baselineOffset: 0]
+        let separator: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.secondaryLabelColor]
+
+        let title = NSMutableAttributedString(string: " ", attributes: text)
+        for (index, group) in MenuBarFormatter.groups(model).enumerated() {
+            if index > 0 { title.append(NSAttributedString(string: "  |  ", attributes: separator)) }
+            for piece in group {
+                switch piece {
+                case let .text(string):
+                    title.append(NSAttributedString(string: string, attributes: text))
+                case let .symbol(name):
+                    title.append(Self.symbol(name, font: font, attributes: text))
+                }
+            }
+        }
+        button.attributedTitle = title
+        Log.app.debug("Menu bar: \(title.string.trimmingCharacters(in: .whitespaces), privacy: .public)")
+        button.setAccessibilityLabel("OmniWM Extension: " + title.string.trimmingCharacters(in: .whitespaces))
+    }
+
+    /// An SF Symbol inline with the text, tinted like the text (template).
+    private static func symbol(_ name: String, font: NSFont, attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
+        let configuration = NSImage.SymbolConfiguration(pointSize: font.pointSize, weight: .regular)
+        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(configuration) else {
+            return NSAttributedString(string: "?", attributes: attributes)
+        }
+        image.isTemplate = true
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        // Center the glyph on the text's cap height.
+        let height = image.size.height
+        attachment.bounds = NSRect(x: 0, y: (font.capHeight - height) / 2, width: image.size.width, height: height)
+        let string = NSMutableAttributedString(attachment: attachment)
+        string.addAttributes(attributes, range: NSRange(location: 0, length: string.length))
+        return string
     }
 
     // MARK: - Icon
@@ -46,7 +97,14 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             row.toolTip = "Open config file"
             menu.addItem(row)
         }
-        if !warnings.isEmpty { menu.addItem(.separator()) }
+        // ⓘ notices: this display overrides a global value we write (PDR §6.6).
+        let notices = app.notices
+        for notice in notices {
+            let row = NSMenuItem(title: "ⓘ \(notice)", action: nil, keyEquivalent: "")
+            row.isEnabled = false
+            menu.addItem(row)
+        }
+        if !warnings.isEmpty || !notices.isEmpty { menu.addItem(.separator()) }
 
         addCommandItems(to: menu)
         menu.addItem(.separator())
