@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-05
+
 ### Changed
 - The minimum macOS is now 26.0 (was 27.0), so the app runs on Macs still on macOS 26.x. The build no longer uses any API that needs 27, and every system library it requires also ships on 26. Builds stay Apple Silicon only (`ARCHS = arm64`).
 
