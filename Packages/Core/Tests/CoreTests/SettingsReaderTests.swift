@@ -63,6 +63,13 @@ import Testing
         #expect(settings.outerGaps == .init(top: 1, bottom: 2, left: 3, right: 4.5))
     }
 
+    @Test func loadFromFile() throws {
+        let file = try TempSettings()
+        #expect(SettingsReader.load(from: file.url).settings?.visibleContainerCount == 2)
+        try FileManager.default.removeItem(at: file.url)
+        #expect(SettingsReader.load(from: file.url).issues == ["not found at \(file.url.path)"])
+    }
+
     @Test func syntaxErrorIsReported() {
         let result = SettingsReader.read("[general]\nhyperKeyModifiers = \"Control\n")
         #expect(result.settings == nil)

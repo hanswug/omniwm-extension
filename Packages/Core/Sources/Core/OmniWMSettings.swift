@@ -62,6 +62,22 @@ public struct SettingsReadResult: Sendable, Equatable {
 
 /// Reads OmniWM's `settings.toml` with TOMLKit (reading only; writes go through `SettingsEditor`).
 public enum SettingsReader {
+    /// Reads and parses the file. Never throws: problems become `issues`.
+    public static func load(from url: URL) -> SettingsReadResult {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch CocoaError.fileReadNoSuchFile {
+            return SettingsReadResult(settings: nil, issues: ["not found at \(url.path)"])
+        } catch {
+            return SettingsReadResult(settings: nil, issues: ["couldn't read \(url.path): \(error.localizedDescription)"])
+        }
+        guard let text = String(data: data, encoding: .utf8) else {
+            return SettingsReadResult(settings: nil, issues: ["\(url.lastPathComponent) is not valid UTF-8"])
+        }
+        return read(text)
+    }
+
     public static func read(_ text: String) -> SettingsReadResult {
         let root: TOMLTable
         do {
