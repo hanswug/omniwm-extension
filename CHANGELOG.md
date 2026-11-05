@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-05
+
 ### Fixed
 - OmniWM allows at most **5** visible containers, not 6 (the PDR was wrong):
   - commands and the menu go 1–5;
