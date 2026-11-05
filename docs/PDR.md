@@ -292,7 +292,7 @@ Port the semantics of the existing Perl scripts to Swift, then harden them:
 - **If the current workspace is Dwindle: do nothing, HUD `Dwindle — skipped`.**
 - If OmniWM isn't reachable (layout unknown): apply the change and show the normal HUD.
 - If N already equals the current count: no write, show the HUD anyway (confirmation).
-- After a count change is written, wait briefly for OmniWM's live reload (~300 ms), then run `omniwmctl command balance-sizes` (resolved per §6.7, 2 s timeout, off the main thread). No write → no Balance Sizes. A failed Balance Sizes is logged; the write itself stands.
+- After a count change is written, wait briefly for OmniWM's live reload (150 ms; OmniWM 0.7.6 reloads ~80 ms after a write), then run `omniwmctl command balance-sizes` (resolved per §6.7, 2 s timeout, off the main thread). No write → no Balance Sizes. A failed Balance Sizes is logged; the write itself stands.
 
 ### 6.4 Borders
 - `toggle_borders` flips `[borders] enabled` → HUD.

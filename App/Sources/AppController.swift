@@ -53,7 +53,8 @@ final class AppController {
     // MARK: - Commands
 
     /// How long OmniWM gets to live-reload settings.toml before we run a follow-up against it.
-    private static let omniwmReloadDelay: Duration = .milliseconds(300)
+    /// Measured on OmniWM 0.7.6: it reloads 75–81 ms after our write; 150 ms leaves ~2× margin.
+    private static let omniwmReloadDelay: Duration = .milliseconds(150)
 
     /// Runs a command against OmniWM's settings (PDR §6.2–§6.4). Never blocks the main thread.
     func run(_ command: Command) {
