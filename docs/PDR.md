@@ -332,8 +332,8 @@ Port the semantics of the existing Perl scripts to Swift, then harden them:
 Hans wants feedback for OmniWM's own `toggle-fullscreen`, `toggle-workspace-layout` and `toggle-container-full-primary-span`, however they are triggered. IPC has no command events, so they are detected from state:
 - **Layout:** the current workspace (same id) changes `layout` → HUD `Niri` / `Dwindle`.
 - **Fullscreen:** the focused window (same id) flips `isFullscreen` → HUD + `F` in the menu bar.
-- **Full container:** on a Niri workspace with **≥ 2 columns**, the focused tiled window's width is at least the usable width (`visibleFrame.width − outerGapLeft − outerGapRight`, 2 pt tolerance). A flip for the same focused window → HUD + `FC` in the menu bar.
-- Never fire on a workspace switch, a focus change, the initial snapshot or a reconnect.
+- **Full container:** while the effective visible container count (incl. per-display override) is **≥ 2** (with 1, every column is full width; fixed in 1.0.2), on a Niri workspace with **≥ 2 columns**, the focused tiled window's width is at least the usable width (`visibleFrame.width − outerGapLeft − outerGapRight`, 2 pt tolerance). A flip for the same focused window → HUD + `FC` in the menu bar.
+- Never fire on a workspace switch, a focus change, a visible-containers change, the initial snapshot or a reconnect.
 
 ---
 

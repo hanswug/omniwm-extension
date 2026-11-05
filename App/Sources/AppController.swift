@@ -41,6 +41,11 @@ final class AppController {
         settings.onChange = { [weak self] in
             self?.updateHotkeys()
             self?.onStatusChange?()
+            self?.bridge.refresh() // the container count feeds FC (PDR §6.8)
+        }
+        bridge.containerCountProvider = { [weak self] in
+            guard let self else { return nil }
+            return DisplayOverrides.effectiveContainerCount(settings.settings, on: currentDisplayIdentity)
         }
         bridge.onChange = { [weak self] in self?.onStatusChange?() }
         bridge.onToggles = { [weak self] toggles in

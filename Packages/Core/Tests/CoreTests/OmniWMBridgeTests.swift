@@ -199,6 +199,52 @@ enum OmniWMFixture {
         #expect(!state.isFullContainer) // a lone full-width window isn't a "full container"
     }
 
+    @Test func singleVisibleContainerIsNeverFullContainer() throws {
+        // Hans (1.0.1): on 1 visible container every column fills the width; FC showed all the time.
+        var state = try OmniWMFixture.baseline()
+        state.apply(try OmniWMFixture.query("query-windows-focused-full-span.json"))
+        state.visibleContainerCount = 1
+        #expect(!state.isFullContainer)
+        #expect(state.focusIndicator == .none)
+        state.visibleContainerCount = 2
+        #expect(state.isFullContainer)
+        state.visibleContainerCount = nil // unknown (settings unreadable): not excluded
+        #expect(state.isFullContainer)
+    }
+
+    @Test func fullscreenStillShowsOnSingleContainer() throws {
+        var state = try OmniWMFixture.baseline()
+        state.visibleContainerCount = 1
+        state.apply(try OmniWMFixture.query("query-windows-focused-fullscreen.json"))
+        #expect(state.focusIndicator == .fullscreen)
+    }
+
+    @Test func containerCountChangeFiresNoFullContainerHUD() throws {
+        // Full span on at 2 containers, then the user switches to 1: the width stays full,
+        // FC goes away, and only the "1 container" command HUD should show.
+        var old = try OmniWMFixture.baseline()
+        old.apply(try OmniWMFixture.messages("toggle-full-span.ndjson")[1])
+        old.apply(try OmniWMFixture.query("query-windows-focused-full-span.json"))
+        old.visibleContainerCount = 2
+        #expect(old.isFullContainer)
+        var new = old
+        new.visibleContainerCount = 1
+        #expect(!new.isFullContainer)
+        #expect(OmniWMToggles.transitions(from: old, to: new).isEmpty)
+
+        // And back from 1 to 2 with a full-width column: no "on" HUD either.
+        #expect(OmniWMToggles.transitions(from: new, to: old).isEmpty)
+    }
+
+    @Test func fullSpanToggleStillFiresAtTwoContainers() throws {
+        var baseline = try OmniWMFixture.baseline()
+        baseline.visibleContainerCount = 2
+        var on = baseline
+        on.apply(try OmniWMFixture.messages("toggle-full-span.ndjson")[1])
+        on.apply(try OmniWMFixture.query("query-windows-focused-full-span.json"))
+        #expect(OmniWMToggles.transitions(from: baseline, to: on) == [.fullContainerOn])
+    }
+
     @Test func fullscreenWinsOverFullContainer() throws {
         var state = try OmniWMFixture.baseline()
         state.apply(try OmniWMFixture.query("query-windows-focused-fullscreen.json"))

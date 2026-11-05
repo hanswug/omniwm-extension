@@ -20,6 +20,8 @@ final class OmniWMBridge {
     var onChange: (() -> Void)?
     /// OmniWM toggles detected between settled states.
     var onToggles: (([HUDMessage]) -> Void)?
+    /// Effective visible container count for the current display; stamped on every settled state.
+    var containerCountProvider: (() -> Int?)?
 
     private let homeDirectory: URL
     private var working = OmniWMState()
@@ -58,6 +60,12 @@ final class OmniWMBridge {
         pollTask?.cancel()
         process?.terminate()
         process = nil
+    }
+
+    /// Re-query and re-settle now (e.g. settings.toml changed the container count).
+    func refresh() {
+        guard reachable else { return }
+        scheduleRefresh(after: .zero)
     }
 
     // MARK: - Process lifecycle
@@ -217,6 +225,7 @@ final class OmniWMBridge {
 
     private func settle() {
         let previous = state
+        working.visibleContainerCount = containerCountProvider?()
         state = working
         let s = state
         Log.bridge.debug("Settled: ws=\(s.currentWorkspace?.number ?? -1) layout=\(s.currentLayout?.rawValue ?? "?", privacy: .public) focused=\(s.focusedWindow?.id.map { String($0.suffix(8)) } ?? "nil", privacy: .public) fs=\(s.isFullscreen) fc=\(s.isFullContainer) width=\(s.focusedWindow?.frame?.width ?? -1) mode=\(s.focusedWindow?.mode ?? "?", privacy: .public) cols=\(s.currentWorkspace?.columns?.count ?? -1)")
