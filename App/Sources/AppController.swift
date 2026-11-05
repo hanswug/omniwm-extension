@@ -8,18 +8,23 @@ final class AppController {
     let config: ConfigController
     let settings = SettingsController()
     private let hotkeys = HotkeyManager()
+    private let hud = HUDController()
     private var plan: HotkeyPlan?
     private var hyperIssue: String?
     /// Commands run one after another, so rapid presses each see the previous result.
     private var commandChain: Task<Void, Never>?
-    /// Shown in the menu until the next command succeeds (the HUD takes over in 0.5.0).
+    /// Last command failure; shown in the menu only while the HUD is disabled (errors must surface somewhere).
     private var lastCommandError: String?
 
     init(paths: AppPaths) {
         self.paths = paths
         config = ConfigController(url: paths.extensionConfigURL)
 
-        config.onChange = { [weak self] _ in self?.configChanged() }
+        config.onChange = { [weak self] outcome in
+            guard let self else { return }
+            configChanged()
+            if let message = HUDMessage.forConfig(outcome) { showHUD(message) }
+        }
         settings.onChange = { [weak self] in self?.updateHotkeys() }
         hotkeys.onPress = { [weak self] registration in
             Log.hotkeys.info("Hotkey \(registration.hotkey.description, privacy: .public) → \(registration.action.description, privacy: .public)")
@@ -41,7 +46,7 @@ final class AppController {
             rows += plan.conflicts.map(\.description)
         }
         rows += hotkeys.failures.map { "Couldn't register \($0.hotkey)" }
-        if let lastCommandError { rows.append(lastCommandError) }
+        if let lastCommandError, !config.config.hud.enabled { rows.append(lastCommandError) }
         return rows
     }
 
@@ -50,8 +55,16 @@ final class AppController {
         plan?.registrations.first { $0.action == action && !hotkeys.failures.contains($0) }?.resolved
     }
 
-    // MARK: - Commands
+    // MARK: - HUD
 
+    /// Shows a HUD using the current config's `[hud]` settings (PDR §5.3).
+    private func showHUD(_ message: HUDMessage) {
+        let settings = config.config.hud
+        guard settings.enabled else { return }
+        hud.show(message, position: settings.position, durationMs: settings.durationMs)
+    }
+
+    // MARK: - Commands
 
     /// Runs a command against OmniWM's settings (PDR §6.2–§6.4). Never blocks the main thread.
     func run(_ command: Command) {
@@ -79,11 +92,13 @@ final class AppController {
             case let .success(outcome):
                 lastCommandError = nil
                 Log.settings.info("\(command.description, privacy: .public) → \(String(describing: outcome.result), privacy: .public)")
+                showHUD(HUDMessage(outcome.result))
                 if let followUp = outcome.followUp {
                     await runFollowUp(followUp, after: reloadDelay)
                 }
             case let .failure(error):
                 lastCommandError = "Couldn't write OmniWM settings: \(error)"
+                showHUD(.writeFailure)
                 Log.settings.error("\(command.description, privacy: .public) failed: \(error.description, privacy: .public)")
             }
             settings.reload() // the watcher would catch it too; this keeps the menu state current sooner
