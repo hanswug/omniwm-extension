@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-04
+
 ### Added
 - `SettingsEditor`: surgical edits of OmniWM's `settings.toml` per PDR §6.1. It changes only the target value token, inserts a missing key as the first body line, errors on a missing table, writes atomically with permissions preserved, follows symlinks, retries once on concurrent modification, and skips no-op writes. Golden-file tests run on a copy of the real `settings.toml`.
 - `SettingsReader`: borders, outer gaps, visible container count, hyper modifiers, OmniWM hotkeys, monitor overrides and workspace display names. The settings file is watched live.
