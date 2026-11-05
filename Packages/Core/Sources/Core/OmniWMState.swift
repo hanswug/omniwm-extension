@@ -13,6 +13,9 @@ public struct OmniWMState: Sendable, Equatable {
     public var displays: [OmniWMDisplay] = []
     public var activeWorkspace: OmniWMWorkspaceRef?
     public var focusedWindow: OmniWMWindow?
+    /// Effective `visibleContainerCount` for the current display (from settings.toml, incl. overrides),
+    /// stamped by the app. With 1, every column is full width, so "full container" means nothing.
+    public var visibleContainerCount: Int?
 
     /// Tolerance when comparing the focused window's width to the usable width.
     public static let widthTolerance = 2.0
@@ -75,8 +78,10 @@ public struct OmniWMState: Sendable, Equatable {
 
     public var isFullscreen: Bool { focusedWindow?.isFullscreen == true }
 
-    /// The focused tiled window's column fills the usable width on a Niri workspace with ≥ 2 columns (PDR §6.8).
+    /// The focused tiled window's column fills the usable width on a Niri workspace with ≥ 2 columns,
+    /// while the visible container count is ≥ 2 (PDR §6.8). Unknown count → not excluded.
     public var isFullContainer: Bool {
+        if let count = visibleContainerCount, count < 2 { return false }
         guard let window = focusedWindow, window.isFullscreen != true, window.mode == "tiling",
               let width = window.frame?.width,
               let workspace = currentWorkspace, workspace.workspaceLayout == .niri,
@@ -126,7 +131,9 @@ public enum OmniWMToggles {
 
         // Full container: same window, same workspace & column count, no fullscreen or layout change in play.
         let sameColumns = (oldWorkspace?.columns?.count ?? 0) == (newWorkspace?.columns?.count ?? 0)
-        if !fullscreenChanged, !layoutChanged, sameWorkspace, sameColumns,
+        // A visible-containers change re-lays out every column; that's not the full-span toggle.
+        let sameCount = old.visibleContainerCount == new.visibleContainerCount
+        if !fullscreenChanged, !layoutChanged, sameWorkspace, sameColumns, sameCount,
            !old.isFullscreen, !new.isFullscreen, old.isFullContainer != new.isFullContainer {
             messages.append(new.isFullContainer ? .fullContainerOn : .fullContainerOff)
         }

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The menu bar showed `FC` all the time on 1 visible container, because every column fills the width there. `FC` now also requires an effective visible container count of at least 2 (per-display overrides count). Changing the count no longer fires a "Full container on/off" HUD.
+
 ## [1.0.1] - 2026-11-05
 
 ### Changed
