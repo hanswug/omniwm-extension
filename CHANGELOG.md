@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Padding: select a preset (menu or per-preset hotkey) and `cycle_padding` (next preset, wraps; from Custom goes to the first). The current preset is matched within 0.01 on all four edges; the first match wins, otherwise Custom.
+- Visible containers 1–6 (`[niri] visibleContainerCount`). The Dwindle check treats the layout as unknown and applies until the OmniWM bridge lands.
+- Borders toggle (`[borders] enabled`).
+- Menu: Padding submenu (Cycle, presets, Custom), Visible containers submenu and Borders, with checkmarks from `settings.toml` and the registered hotkeys as key-equivalent hints.
+- Commands run one at a time off the main thread. Each decides from a fresh read inside the atomic edit, so a retry after a concurrent change re-decides. Failures show in the menu until the next command succeeds.
+
 ## [0.3.0] - 2026-11-04
 
 ### Added
