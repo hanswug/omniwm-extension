@@ -1,0 +1,55 @@
+name: OmniWMExtension
+
+options:
+  bundleIdPrefix: com.omniwm
+  deploymentTarget:
+    macOS: "27.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.0.0"          # overridden by the Makefile from VERSION
+    CURRENT_PROJECT_VERSION: "1"        # overridden by the Makefile (git rev-list --count HEAD)
+
+packages:
+  Core:
+    path: Packages/Core
+
+targets:
+  OmniWMExtension:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/Sources
+      - path: App/Resources
+        excludes:
+          - Info.plist
+    dependencies:
+      - package: Core
+    settings:
+      base:
+        PRODUCT_NAME: "OmniWM Extension"
+        PRODUCT_BUNDLE_IDENTIFIER: com.omniwm.extension
+        INFOPLIST_FILE: App/Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "OmniWM Extension Self-Signed"
+        DEVELOPMENT_TEAM: ""
+        ENABLE_HARDENED_RUNTIME: YES
+        OTHER_CODE_SIGN_FLAGS: "--timestamp=none"
+        COMBINE_HIDPI_IMAGES: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        DEAD_CODE_STRIPPING: YES
+
+schemes:
+  OmniWMExtension:
+    build:
+      targets:
+        OmniWMExtension: all
+    run:
+      config: Debug
+    archive:
+      config: Release
