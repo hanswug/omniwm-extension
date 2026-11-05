@@ -151,12 +151,12 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         paddingItem.submenu = padding
         menu.addItem(paddingItem)
 
-        // Visible containers ▸ 1…6 (stays enabled on Dwindle; choosing behaves like the hotkey).
+        // Visible containers ▸ 1…5 (stays enabled on Dwindle; choosing behaves like the hotkey).
         let containers = NSMenu()
         containers.autoenablesItems = false
         let commands: [CommandHotkey] = [
             .visibleContainers1, .visibleContainers2, .visibleContainers3,
-            .visibleContainers4, .visibleContainers5, .visibleContainers6,
+            .visibleContainers4, .visibleContainers5,
         ]
         for (offset, command) in commands.enumerated() {
             let count = offset + 1

@@ -9,11 +9,14 @@ public enum WorkspaceLayout: String, Sendable, Equatable {
 public enum Command: Sendable, Equatable, CustomStringConvertible {
     case cyclePadding
     case selectPreset(String)
-    /// 1…6.
+    /// 1…5 (OmniWM's maximum).
     case visibleContainers(Int)
     case toggleBorders
     /// Write exact `[gaps.outer]` values back (display awareness, PDR §6.5).
     case restoreGaps(OmniWMSettings.OuterGaps)
+
+    /// OmniWM allows 1–5 visible containers (Hans, 2026-11-05; the PDR originally said 6).
+    public static let visibleContainerRange = 1...5
 
     public init(_ action: HotkeyAction) {
         switch action {
@@ -24,7 +27,6 @@ public enum Command: Sendable, Equatable, CustomStringConvertible {
         case .command(.visibleContainers3): self = .visibleContainers(3)
         case .command(.visibleContainers4): self = .visibleContainers(4)
         case .command(.visibleContainers5): self = .visibleContainers(5)
-        case .command(.visibleContainers6): self = .visibleContainers(6)
         case let .selectPreset(name): self = .selectPreset(name)
         }
     }
@@ -81,7 +83,7 @@ public enum CommandError: Error, Sendable, Equatable, CustomStringConvertible {
         switch self {
         case .noPresets: "no padding presets configured"
         case let .unknownPreset(name): "no padding preset named \"\(name)\""
-        case let .invalidContainerCount(count): "visible containers must be 1–6 (got \(count))"
+        case let .invalidContainerCount(count): "visible containers must be 1–5 (got \(count))"
         case let .settings(error): error.description
         }
     }
@@ -116,7 +118,7 @@ public enum CommandPlanner {
             return (gapEdits(preset), .paddingSet(name: preset.name))
 
         case let .visibleContainers(count):
-            guard (1...6).contains(count) else { throw .invalidContainerCount(count) }
+            guard Command.visibleContainerRange.contains(count) else { throw .invalidContainerCount(count) }
             // Unknown layout (OmniWM unreachable) → apply (PDR §6.3).
             if layout == .dwindle { return ([], .skippedDwindle) }
             return ([SettingsEdit(table: "niri", key: "visibleContainerCount", value: .int(count))], .containersSet(count))
@@ -174,7 +176,7 @@ public enum CommandPlanner {
             if presets.isEmpty { throw .noPresets }
             if !presets.contains(where: { $0.name.lowercased() == name.lowercased() }) { throw .unknownPreset(name) }
         case let .visibleContainers(count):
-            if !(1...6).contains(count) { throw .invalidContainerCount(count) }
+            if !Command.visibleContainerRange.contains(count) { throw .invalidContainerCount(count) }
         case let .restoreGaps(gaps):
             for value in [gaps.top, gaps.bottom, gaps.left, gaps.right] where !value.isFinite || value < 0 {
                 throw .settings(.invalidValue("\(value)"))

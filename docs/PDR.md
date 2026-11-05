@@ -49,7 +49,7 @@ Verified against omniwm.app docs (Nov 2026). Re-verify anything marked ⚠ again
 | `general.hyperKeyModifiers` defines Hyper (currently `"Control+Option+Shift+Command"`). | `hyper` in our config resolves to this value. |
 | `[[hotkeys]]` entries: `binding = "Control+Option+H"` or `"Unassigned"`. | Used for conflict detection. |
 | `[[monitorGapOverrides]]` and `[[monitorNiriOverrides]]` (can override `visibleContainerCount`) exist per display. | The app writes globals only and warns when an override masks the change (§6.6). |
-| `niri.visibleContainerCount`: integer, app max 6. | Commands 1–6. |
+| `niri.visibleContainerCount`: integer, OmniWM max **5** (corrected 2026-11-05; originally stated as 6). | Commands 1–5. |
 | A file change to `visibleContainerCount` is reloaded but existing columns only re-lay out after **Balance Sizes** (`omniwmctl command balance-sizes`). Found in 0.4.0 review. | Every written count change is followed by a Balance Sizes (§6.3). |
 | IPC has **no command events** — subscribers only see state (`focus`, `windows-changed` incl. per-window `isFullscreen`, `layout-changed` incl. per-workspace `layout`, `display-changed` incl. `visibleFrame` and `outerGap*`). Verified on 0.7.6 / protocol 19. | OmniWM toggles (fullscreen, workspace layout, full primary span) are detected as state transitions (§6.8). |
 | No IPC field for "container at full primary span". ⚠ | Inferred from the focused window's width vs. the usable width (§6.8). |
@@ -155,7 +155,6 @@ visible_containers_2 = "hyper+2"
 visible_containers_3 = "hyper+3"
 visible_containers_4 = "hyper+4"
 visible_containers_5 = ""
-visible_containers_6 = ""
 
 # Padding presets. Order = cycle order. The FIRST preset is the one
 # auto_fullscreen_on_builtin applies. Add, remove, or rename freely.
@@ -219,7 +218,7 @@ Layout, left to right:
 | workspace | `#` if the workspace has no `displayName`, else `# - displayName`. |
 | borders | SF Symbol `square` when enabled, `square.dashed` when disabled. |
 | layout | SF Symbol `rectangle.split.3x1` for Niri, `rectangle.split.2x2` for Dwindle (like OmniWM's layout picker; changed from text in 0.7.1). VoiceOver reads "Niri" / "Dwindle". |
-| containers | Niri only. Count ≤ 4: filled dots = count, hollow up to 4 (`●●○○`). Count 5 or 6: text `5/6` / `6/6`. Hidden for Dwindle. |
+| containers | Niri only. Count ≤ 4: filled dots = count, hollow up to 4 (`●●○○`). Count 5: text `5/5`. Hidden for Dwindle. |
 | focus state | `F` while the focused window is fullscreen, `FC` while it is a full container (§6.8). Hidden otherwise. `F` wins if both apply. Added 2026-11-05. |
 
 - Separators are literal thin `|` in secondary label color. Use the monospaced-digit system font at menu bar size so the item doesn't jitter in width.
@@ -236,7 +235,7 @@ Padding                ▸   Cycle               ⌃⌥0
                            Wide
                            Single
                            (Custom ✓, disabled — only when current gaps match no preset)
-Visible containers     ▸   1  ⌃⌥⇧⌘1 … 6
+Visible containers     ▸   1  ⌃⌥⇧⌘1 … 5
 Borders            ✓        ⌃⌥B
 ─────
 Edit config file
@@ -298,7 +297,7 @@ Port the semantics of the existing Perl scripts to Swift, then harden them:
 - Padding commands work regardless of workspace layout.
 
 ### 6.3 Visible containers
-- Commands `visible_containers_1…6` write `[niri] visibleContainerCount = N`.
+- Commands `visible_containers_1…5` write `[niri] visibleContainerCount = N`. A `visible_containers_6` key left in an older config is ignored when empty and a warning when bound.
 - **If the current workspace is Dwindle: do nothing, HUD `Dwindle — skipped`.**
 - If OmniWM isn't reachable (layout unknown): apply the change and show the normal HUD.
 - If N already equals the current count: no write, show the HUD anyway (confirmation).
@@ -408,7 +407,7 @@ Branch `feat/settings-editor-hotkeys`
 
 ### 0.4.0 — Commands
 Branch `feat/commands`
-- Padding select/cycle (§6.2), visible containers 1–6 (§6.3, Dwindle check stubbed as "unknown → apply" until 0.6.0), borders toggle (§6.4). Menu: Padding submenu with Cycle + presets + Custom, Visible containers submenu, Borders item, hotkey hints.
+- Padding select/cycle (§6.2), visible containers 1–5 (§6.3, Dwindle check stubbed as "unknown → apply" until 0.6.0), borders toggle (§6.4). Menu: Padding submenu with Cycle + presets + Custom, Visible containers submenu, Borders item, hotkey hints.
 
 **AC:** preset matcher tests (exact, tolerance, Custom, first-match-wins); cycle order including from Custom and wrap-around.
 **Manual check:** ctrl+opt+0 cycles Fullscreen → Wide → Single → Fullscreen and OmniWM visibly re-lays out · hand-edit gaps → menu shows Custom; cycling goes to Fullscreen · hyper+1…4 change columns · ctrl+opt+b toggles borders · add a 4th preset and rename one → appears in menu and cycle without restart.
@@ -424,7 +423,7 @@ Branch `feat/hud`
 Branch `feat/omniwm-bridge`
 - Capture fixtures first (§6.7). NDJSON parser, subscription process with reconnect/backoff, `query workspaces`. Menu bar rendering per §5.1. Real Dwindle check for containers (§6.3). Override detection and effective container count (§6.6). Unreachable state. OmniWM toggle HUDs and `F`/`FC` menu bar state (§6.8, added 2026-11-05).
 
-**AC:** parser tests against the captured fixtures (incl. malformed line, unknown channel). Menu bar formatter tests for every segment (displayName present/absent, Niri 1–6, Dwindle, unreachable, F, FC). Toggle detection tests: each toggle fires once; workspace switch, focus change and snapshots don't fire; FC needs ≥ 2 columns.
+**AC:** parser tests against the captured fixtures (incl. malformed line, unknown channel). Menu bar formatter tests for every segment (displayName present/absent, Niri 1–5, Dwindle, unreachable, F, FC). Toggle detection tests: each toggle fires once; workspace switch, focus change and snapshots don't fire; FC needs ≥ 2 columns.
 **Manual check:** switching workspaces updates the label instantly · `displayName` shows `# - Name` · toggle a workspace to Dwindle → dots disappear; hyper+2 shows "Dwindle — skipped" · quit OmniWM → `—`; relaunch → recovers by itself · turn IPC off/on in OmniWM → same · OmniWM toggle-fullscreen / toggle-workspace-layout / toggle-container-full-primary-span each show their HUD · menu bar shows `F` / `FC` while active · switching workspaces or focus shows no toggle HUD.
 
 ### 0.7.0 — Display awareness

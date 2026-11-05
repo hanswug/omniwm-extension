@@ -91,11 +91,11 @@ public enum MenuBarFormatter {
         return "\(number) - \(name)"
     }
 
-    /// `●●○○` for 1–4, `5/6` / `6/6` for 5–6; `nil` when unknown or out of range.
+    /// `●●○○` for 1–4, `5/5` for 5 (OmniWM's maximum); `nil` when unknown or out of range.
     public static func containers(_ count: Int?) -> String? {
         guard let count, count >= 1 else { return nil }
         if count <= 4 { return String(repeating: "●", count: count) + String(repeating: "○", count: 4 - count) }
-        return "\(min(count, 6))/6"
+        return "\(min(count, 5))/5"
     }
 
     /// IPC reports `displayName` = the raw name when no label is set; treat that as "no name".

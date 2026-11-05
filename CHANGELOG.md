@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-05
+
+### Fixed
+- OmniWM allows at most **5** visible containers, not 6 (the PDR was wrong):
+  - commands and the menu go 1–5;
+  - the menu bar shows `5/5` for five;
+  - the default config no longer has `visible_containers_6`. An existing one is ignored when empty and a warning when bound.
+
+### Added
+- README: install (source and release), signing script, update paths, config reference, how the app touches OmniWM, troubleshooting with `log stream`, development.
+- Stress tests on a copy of the real `settings.toml`:
+  - 100 rapid cycles change only the gap lines and end on the right preset;
+  - 100 cycles while a simulated OmniWM rewrites another key every 20 ms: the file stays valid, the gaps are never torn, and OmniWM's last write always survives;
+  - 4 × 25 unserialized concurrent cycles never tear the gaps.
+
+### Changed
+- Hardening checks, no code changes needed:
+  - 45 forced reconnects of the `omniwmctl` child leave exactly one child, no zombies, stable file descriptors and flat memory;
+  - main-thread audit: all file and process I/O runs off the main thread, and a sample under load showed the main thread 98 % idle.
+
 ## [0.7.1] - 2026-11-05
 
 ### Changed

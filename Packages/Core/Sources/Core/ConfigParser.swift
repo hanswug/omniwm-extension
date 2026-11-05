@@ -38,6 +38,7 @@ private struct Validator {
     private static let rootKeys: Set<String> = ["general", "hud", "hotkeys", "padding"]
     private static let generalKeys: Set<String> = ["omniwm_settings", "auto_fullscreen_on_builtin", "balance_sizes_delay_ms"]
     private static let hudKeys: Set<String> = ["enabled", "position", "duration_ms"]
+    private static let retiredContainersKey = "visible_containers_6"
     private static let presetKeys: Set<String> = ["name", "top", "bottom", "left", "right", "hotkey"]
 
     /// A bound chord and where it came from, for duplicate detection.
@@ -89,8 +90,15 @@ private struct Validator {
         // Omitting [hotkeys] or a key inside it = unbound.
         var hotkeys: [CommandHotkey: Hotkey] = [:]
         if let table = section("hotkeys") {
-            let known = Set(CommandHotkey.allCases.map(\.rawValue))
+            let known = Set(CommandHotkey.allCases.map(\.rawValue)).union([Self.retiredContainersKey])
             warnUnknownKeys(in: table, known: known, context: "[hotkeys]") { locator.line(table: "hotkeys", key: $0) }
+            // Written by older default configs; harmless when unbound, pointless when bound (OmniWM max is 5).
+            if let value = table[Self.retiredContainersKey], value.string?.trimmingCharacters(in: .whitespaces).isEmpty != true {
+                warning(
+                    "hotkeys.\(Self.retiredContainersKey) is not supported (OmniWM allows at most 5 visible containers); remove it",
+                    locator.line(table: "hotkeys", key: Self.retiredContainersKey)
+                )
+            }
             for command in CommandHotkey.allCases {
                 let line = locator.line(table: "hotkeys", key: command.rawValue)
                 guard let value = table[command.rawValue] else { continue }

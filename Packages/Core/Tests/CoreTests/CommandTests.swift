@@ -119,7 +119,7 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
         #expect(plan.edits.isEmpty)
     }
 
-    @Test(arguments: [0, 7, -1])
+    @Test(arguments: [0, 6, -1])
     func visibleContainersOutOfRange(_ count: Int) throws {
         #expect(throws: CommandError.invalidContainerCount(count)) { try plan(.visibleContainers(count)) }
     }
@@ -149,7 +149,7 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
         #expect(Command(.command(.cyclePadding)) == .cyclePadding)
         #expect(Command(.command(.toggleBorders)) == .toggleBorders)
         #expect(Command(.command(.visibleContainers1)) == .visibleContainers(1))
-        #expect(Command(.command(.visibleContainers6)) == .visibleContainers(6))
+        #expect(Command(.command(.visibleContainers5)) == .visibleContainers(5))
         #expect(Command(.selectPreset("Wide")) == .selectPreset("Wide"))
     }
 }

@@ -36,11 +36,11 @@ private func onlyError(_ text: String, sourceLocation: SourceLocation = #_source
         #expect(config.hud == .init(enabled: true, position: .center, durationMs: 900))
         #expect(config.padding.map(\.name) == ["Fullscreen", "Wide", "Single"])
         #expect(config.hotkeys.count == 6) // the six non-empty bindings all parsed
+        #expect(!ExtConfig.defaultFileContents.contains("visible_containers_6"))
         #expect(config.hotkeys[.cyclePadding]?.description == "ctrl+opt+0")
         #expect(config.hotkeys[.toggleBorders]?.description == "ctrl+opt+b")
         #expect(config.hotkeys[.visibleContainers4]?.description == "hyper+4")
         #expect(config.hotkeys[.visibleContainers5] == nil)
-        #expect(config.hotkeys[.visibleContainers6] == nil)
     }
 
     @Test func defaultFileStartsWithCommentHeader() {
@@ -244,6 +244,23 @@ private func onlyError(_ text: String, sourceLocation: SourceLocation = #_source
 }
 
 @Suite struct ConfigHotkeyValidationTests {
+    @Test func retiredSixthContainerKeyIsSilentWhenUnbound() throws {
+        // Older default configs contain `visible_containers_6 = ""`.
+        let result = parse("[hotkeys]\nvisible_containers_6 = \"\"\n" + onePreset)
+        #expect(result.config != nil)
+        #expect(result.issues.isEmpty)
+    }
+
+    @Test func retiredSixthContainerKeyWarnsWhenBound() throws {
+        let result = parse("[hotkeys]\nvisible_containers_6 = \"hyper+6\"\n" + onePreset)
+        #expect(result.config != nil)
+        #expect(result.errors.isEmpty)
+        #expect(result.warnings.map(\.message) == [
+            "hotkeys.visible_containers_6 is not supported (OmniWM allows at most 5 visible containers); remove it",
+        ])
+        #expect(result.warnings.first?.line == 2)
+    }
+
     @Test func unknownTokenNamesKeyAndToken() throws {
         let issue = try onlyError("[hotkeys]\ntoggle_borders = \"ctl+opt+b\"\n" + onePreset)
         #expect(issue.message == "hotkeys.toggle_borders: unknown token \"ctl\" in \"ctl+opt+b\"")

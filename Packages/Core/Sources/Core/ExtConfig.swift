@@ -48,7 +48,6 @@ public enum CommandHotkey: String, Sendable, Hashable, CaseIterable {
     case visibleContainers3 = "visible_containers_3"
     case visibleContainers4 = "visible_containers_4"
     case visibleContainers5 = "visible_containers_5"
-    case visibleContainers6 = "visible_containers_6"
 }
 
 public extension ExtConfig {
@@ -112,7 +111,6 @@ public extension ExtConfig {
     visible_containers_3 = "hyper+3"
     visible_containers_4 = "hyper+4"
     visible_containers_5 = ""
-    visible_containers_6 = ""
 
     # Padding presets. Order = cycle order. The FIRST preset is the one
     # auto_fullscreen_on_builtin applies. Add, remove, or rename freely.
