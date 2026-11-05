@@ -63,7 +63,15 @@ private struct Validator {
         var general = defaults.general
         if let table = section("general") {
             warnUnknownKeys(in: table, known: Self.generalKeys, context: "[general]") { locator.line(table: "general", key: $0) }
-            general.omniwmSettings = string(table, "general", "omniwm_settings") ?? general.omniwmSettings
+            if let path = string(table, "general", "omniwm_settings") {
+                let trimmed = path.trimmingCharacters(in: .whitespaces)
+                if trimmed.isEmpty || trimmed.hasPrefix("/") || trimmed == "~" || trimmed.hasPrefix("~/") {
+                    general.omniwmSettings = path
+                } else {
+                    error("general.omniwm_settings must be empty, absolute, or start with ~/ (got \"\(path)\")",
+                          locator.line(table: "general", key: "omniwm_settings"))
+                }
+            }
             general.autoFullscreenOnBuiltin = bool(table, "general", "auto_fullscreen_on_builtin") ?? general.autoFullscreenOnBuiltin
         }
 

@@ -6,12 +6,14 @@ import Foundation
 public struct AppPaths: Sendable, Equatable {
     public static let bundleIdentifier = "com.omniwm.extension"
 
+    public let homeDirectory: URL
     /// `${XDG_CONFIG_HOME:-~/.config}`
     public let configHome: URL
     /// `~/Library/Application Support/com.omniwm.extension`
     public let appSupportDirectory: URL
 
     public init(environment: [String: String], homeDirectory: URL) {
+        self.homeDirectory = homeDirectory
         if let xdg = environment["XDG_CONFIG_HOME"], xdg.hasPrefix("/") {
             configHome = URL(filePath: xdg, directoryHint: .isDirectory)
         } else {
@@ -43,6 +45,18 @@ public struct AppPaths: Sendable, Equatable {
     /// `<configHome>/omniwm-extension/config.toml`
     public var extensionConfigURL: URL {
         extensionConfigDirectory.appending(path: "config.toml", directoryHint: .notDirectory)
+    }
+
+    /// OmniWM settings to use for `general.omniwm_settings` (PDR §4):
+    /// empty → `omniwmSettingsURL`, `~`/`~/…` → expanded, absolute → as is.
+    /// Relative paths are rejected by `ConfigParser`; here they resolve against home.
+    public func omniwmSettingsURL(configured: String) -> URL {
+        let value = configured.trimmingCharacters(in: .whitespaces)
+        if value.isEmpty { return omniwmSettingsURL }
+        if value == "~" { return homeDirectory }
+        if value.hasPrefix("~/") { return homeDirectory.appending(path: String(value.dropFirst(2)), directoryHint: .notDirectory) }
+        if value.hasPrefix("/") { return URL(filePath: value, directoryHint: .notDirectory) }
+        return homeDirectory.appending(path: value, directoryHint: .notDirectory)
     }
 
     /// `~/Library/Application Support/com.omniwm.extension/state.json`

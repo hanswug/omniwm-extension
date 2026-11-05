@@ -7,10 +7,11 @@ import ServiceManagement
 final class StatusItemController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
-    private let config: ConfigController
+    private let app: AppController
+    private var config: ConfigController { app.config }
 
-    init(config: ConfigController) {
-        self.config = config
+    init(app: AppController) {
+        self.app = app
         super.init()
         statusItem.button?.image = Self.menuBarIcon()
         statusItem.button?.toolTip = "OmniWM Extension"
@@ -38,14 +39,14 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        // Warnings section (PDR §5.2). Clicking a config issue opens the file.
-        let issues = config.issues
-        for issue in issues {
-            let row = item("⚠ \(issue)", action: #selector(editConfigFile))
+        // Warnings section (PDR §5.2). Clicking a row opens the config file.
+        let warnings = app.warnings
+        for warning in warnings {
+            let row = item("⚠ \(warning)", action: #selector(editConfigFile))
             row.toolTip = "Open config file"
             menu.addItem(row)
         }
-        if !issues.isEmpty { menu.addItem(.separator()) }
+        if !warnings.isEmpty { menu.addItem(.separator()) }
 
         menu.addItem(item("Edit config file", action: #selector(editConfigFile)))
         menu.addItem(item("Reload config", action: #selector(reloadConfig)))

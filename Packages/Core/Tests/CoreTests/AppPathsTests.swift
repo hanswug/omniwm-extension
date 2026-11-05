@@ -33,4 +33,12 @@ import Testing
         #expect(paths.appSupportDirectory.path == "/Users/test/Library/Application Support/com.omniwm.extension")
         #expect(paths.stateURL.path == "/Users/test/Library/Application Support/com.omniwm.extension/state.json")
     }
+
+    @Test func configuredOmniWMSettingsPath() {
+        let paths = AppPaths(environment: [:], homeDirectory: home)
+        #expect(paths.omniwmSettingsURL(configured: "").path == "/Users/test/.config/omniwm/settings.toml")
+        #expect(paths.omniwmSettingsURL(configured: "  ").path == "/Users/test/.config/omniwm/settings.toml")
+        #expect(paths.omniwmSettingsURL(configured: "~/dot/omniwm.toml").path == "/Users/test/dot/omniwm.toml")
+        #expect(paths.omniwmSettingsURL(configured: "/etc/omniwm.toml").path == "/etc/omniwm.toml")
+    }
 }

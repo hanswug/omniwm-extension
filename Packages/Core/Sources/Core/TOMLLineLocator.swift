@@ -21,9 +21,9 @@ struct TOMLLineLocator {
         var arrayCounts: [String: Int] = [:]
         var multilineDelimiter: String?
 
-        for (offset, raw) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
+        for (offset, raw) in text.components(separatedBy: "\n").enumerated() {
             let lineNumber = offset + 1
-            let line = raw.trimmingCharacters(in: .whitespaces)
+            let line = raw.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "\r")))
 
             if let delimiter = multilineDelimiter {
                 if line.contains(delimiter) { multilineDelimiter = nil }
