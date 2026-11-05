@@ -1,0 +1,46 @@
+{
+  "id" : "9E29BCF2-5E47-4D66-B09A-B29CCD592F02",
+  "kind" : "query",
+  "ok" : true,
+  "result" : {
+    "kind" : "workspaces",
+    "payload" : {
+      "workspaces" : [
+        {
+          "columns" : [
+            {
+              "index" : 1,
+              "viewport" : "intersecting"
+            },
+            {
+              "index" : 2,
+              "viewport" : "after"
+            }
+          ],
+          "counts" : {
+            "floating" : 1,
+            "scratchpad" : 1,
+            "tiled" : 2,
+            "total" : 3
+          },
+          "display" : {
+            "id" : "display:2",
+            "isMain" : true,
+            "name" : "Odyssey Ark"
+          },
+          "displayName" : "1",
+          "focusedWindowId" : "ow_RjQ3MTAwQzYtM0Q4NC00N0JBLUI1QzQtODBCNzlFODU2NjNCOjU5NzQ6OTQ3",
+          "id" : "636965FE-10A1-4EDB-8D7B-9C5D8143F132",
+          "isCurrent" : true,
+          "isFocused" : true,
+          "isVisible" : true,
+          "layout" : "niri",
+          "number" : 1,
+          "rawName" : "1"
+        }
+      ]
+    }
+  },
+  "status" : "success",
+  "version" : 19
+}

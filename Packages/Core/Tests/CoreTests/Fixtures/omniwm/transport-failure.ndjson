@@ -1,0 +1,1 @@
+{"code":"transport_failure","exitCode":2,"message":"omniwmctl: Error Domain=NSPOSIXErrorDomain Code=2 \"No such file or directory\"","ok":false,"source":"cli","status":"error"}

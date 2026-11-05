@@ -1,0 +1,49 @@
+{
+  "id" : "2F77FFA6-AD52-44B1-8A4F-59B02EA2E1F2",
+  "kind" : "query",
+  "ok" : true,
+  "result" : {
+    "kind" : "windows",
+    "payload" : {
+      "windows" : [
+        {
+          "app" : {
+            "bundleId" : "com.apple.Safari",
+            "name" : "Safari"
+          },
+          "columnIndex" : 1,
+          "display" : {
+            "id" : "display:2",
+            "isMain" : true,
+            "name" : "Odyssey Ark"
+          },
+          "frame" : {
+            "height" : 1374,
+            "width" : 1931,
+            "x" : 8,
+            "y" : 66
+          },
+          "id" : "ow_RjQ3MTAwQzYtM0Q4NC00N0JBLUI1QzQtODBCNzlFODU2NjNCOjU5NzQ6OTQ3",
+          "isAppHidden" : false,
+          "isFocused" : true,
+          "isFullscreen" : false,
+          "isScratchpad" : false,
+          "isVisible" : true,
+          "layoutReason" : "standard",
+          "mode" : "tiling",
+          "pid" : 5974,
+          "title" : "Start Page",
+          "windowId" : 947,
+          "workspace" : {
+            "displayName" : "1",
+            "id" : "636965FE-10A1-4EDB-8D7B-9C5D8143F132",
+            "number" : 1,
+            "rawName" : "1"
+          }
+        }
+      ]
+    }
+  },
+  "status" : "success",
+  "version" : 19
+}
