@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-05
+
 ### Added
 - Live menu bar title per PDR §5.1: `1 - Code  |  ▢  |  Niri ●●○○`. It shows the workspace number and custom name, the borders symbol, the layout, and the effective container dots (`5/6` / `6/6`, hidden on Dwindle). When OmniWM isn't reachable it shows `—` and keeps the borders segment, and the menu warns "OmniWM not reachable".
 - OmniWM bridge: a long-lived `omniwmctl subscribe` child process with reconnect backoff 1/2/5/10 s. It's killed on quit, including on SIGTERM. Parsers are written against captured fixtures.
