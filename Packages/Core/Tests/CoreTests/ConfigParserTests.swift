@@ -202,6 +202,17 @@ private func onlyError(_ text: String, sourceLocation: SourceLocation = #_source
         #expect(issue.message == "general.omniwm_settings must be a string")
     }
 
+    @Test(arguments: ["", "/abs/settings.toml", "~/dot/settings.toml"])
+    func settingsPathAccepted(_ path: String) throws {
+        #expect(parse("[general]\nomniwm_settings = \"\(path)\"\n" + onePreset).config?.general.omniwmSettings == path)
+    }
+
+    @Test func settingsPathMustNotBeRelative() throws {
+        let issue = try onlyError("[general]\nomniwm_settings = \"dot/settings.toml\"\n" + onePreset)
+        #expect(issue.message == "general.omniwm_settings must be empty, absolute, or start with ~/ (got \"dot/settings.toml\")")
+        #expect(issue.line == 2)
+    }
+
     @Test func sectionMustBeTable() throws {
         let issue = try onlyError("hud = 3\n" + onePreset)
         #expect(issue.message == "hud must be a table ([hud])")
