@@ -185,7 +185,7 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
         let inode = try FileManager.default.attributesOfItem(atPath: file.url.path)[.systemFileNumber] as? Int
         let outcome = try CommandPlanner.run(.visibleContainers(2), presets: defaults, layout: nil, settingsURL: file.url)
         #expect(outcome == CommandOutcome(result: .containersSet(2), wroteSettings: false))
-        #expect(outcome.followUp == nil) // nothing changed → no Balance Sizes
+        #expect(outcome.followUp(for: .release) == nil) // nothing changed → no Balance Sizes
         #expect(try FileManager.default.attributesOfItem(atPath: file.url.path)[.systemFileNumber] as? Int == inode)
     }
 
@@ -194,22 +194,23 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
         try FileManager.default.removeItem(at: file.url) // would fail if read
         let outcome = try CommandPlanner.run(.visibleContainers(3), presets: defaults, layout: .dwindle, settingsURL: file.url)
         #expect(outcome == CommandOutcome(result: .skippedDwindle, wroteSettings: false))
-        #expect(outcome.followUp == nil)
+        #expect(outcome.followUp(for: .release) == nil)
     }
 
     @Test func visibleContainersChangeIsFollowedByBalanceSizes() throws {
         let file = try TempSettings()
         let outcome = try CommandPlanner.run(.visibleContainers(3), presets: defaults, layout: nil, settingsURL: file.url)
         #expect(outcome == CommandOutcome(result: .containersSet(3), wroteSettings: true))
-        #expect(outcome.followUp == ["command", "balance-sizes"])
+        #expect(outcome.followUp(for: .release) == ["command", "balance-sizes"])
+        #expect(outcome.followUp(for: .dev) == nil)
         #expect(try file.text.contains("visibleContainerCount = 3\n"))
     }
 
     @Test func otherCommandsHaveNoFollowUp() throws {
         let file = try TempSettings()
-        #expect(try CommandPlanner.run(.cyclePadding, presets: defaults, layout: nil, settingsURL: file.url).followUp == nil)
-        #expect(try CommandPlanner.run(.toggleBorders, presets: defaults, layout: nil, settingsURL: file.url).followUp == nil)
-        #expect(try CommandPlanner.run(.selectPreset("Wide"), presets: defaults, layout: nil, settingsURL: file.url).followUp == nil)
+        #expect(try CommandPlanner.run(.cyclePadding, presets: defaults, layout: nil, settingsURL: file.url).followUp(for: .release) == nil)
+        #expect(try CommandPlanner.run(.toggleBorders, presets: defaults, layout: nil, settingsURL: file.url).followUp(for: .release) == nil)
+        #expect(try CommandPlanner.run(.selectPreset("Wide"), presets: defaults, layout: nil, settingsURL: file.url).followUp(for: .release) == nil)
     }
 
     @Test func restoreCustomGapsExactly() throws {
@@ -218,7 +219,7 @@ private func preset(_ name: String, _ top: Double, _ bottom: Double, _ left: Dou
         let outcome = try CommandPlanner.run(.restoreGaps(gaps), presets: defaults, layout: nil, settingsURL: file.url)
         #expect(outcome.result == .paddingSet(name: "Custom"))
         #expect(try file.text.contains("[gaps.outer]\nbottom = 12.0\nleft = 7.25\nright = 99.0\ntop = 333.5\n"))
-        #expect(outcome.followUp == nil)
+        #expect(outcome.followUp(for: .release) == nil)
     }
 
     @Test func restoreGapsNamesMatchingPreset() throws {

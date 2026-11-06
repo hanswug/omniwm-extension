@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- With OmniWM Dev, a visible-containers change is no longer followed by Balance Sizes: Dev re-lays out by itself, using its own "When Visible Containers Change" setting (Balance Sizes or Reset Layout). The release still gets Balance Sizes.
+
 ## [1.0.3] - 2026-11-05
 
 ### Added
