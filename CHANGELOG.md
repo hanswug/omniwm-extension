@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The repository is public and licensed under GPL-2.0, like OmniWM.
+- The README is written for anyone using OmniWM, not just one setup.
+
 ## [1.0.4] - 2026-11-06
 
 ### Changed
