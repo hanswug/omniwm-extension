@@ -1,0 +1,62 @@
+{
+  "id" : "4BAD6A04-B66C-466B-A9E2-55942B9AAEA4",
+  "kind" : "query",
+  "ok" : true,
+  "result" : {
+    "kind" : "displays",
+    "payload" : {
+      "displays" : [
+        {
+          "activeWorkspace" : {
+            "displayName" : "1",
+            "id" : "12EF3B64-1AAC-448D-B6A3-4BABA5ABEFC3",
+            "number" : 1,
+            "rawName" : "1"
+          },
+          "barFrames" : [
+            {
+              "height" : 32,
+              "width" : 329,
+              "x" : 1755,
+              "y" : 2128
+            }
+          ],
+          "frame" : {
+            "height" : 2160,
+            "width" : 3840,
+            "x" : 0,
+            "y" : 0
+          },
+          "fullscreenUsesOuterGaps" : true,
+          "hasNotch" : false,
+          "id" : "display:2",
+          "innerGap" : 9,
+          "isCurrent" : true,
+          "isMain" : true,
+          "menuBarHeight" : 30,
+          "name" : "Odyssey Ark",
+          "orientation" : "horizontal",
+          "outerGapBottom" : 8,
+          "outerGapLeft" : 640,
+          "outerGapRight" : 640,
+          "outerGapTop" : 720,
+          "reservedInsets" : {
+            "bottom" : 0,
+            "left" : 0,
+            "right" : 0,
+            "top" : 2
+          },
+          "uuid" : "F866C67C-89BE-4CCE-AAAC-E01C2B5A27F3",
+          "visibleFrame" : {
+            "height" : 2072,
+            "width" : 3840,
+            "x" : 0,
+            "y" : 58
+          }
+        }
+      ]
+    }
+  },
+  "status" : "success",
+  "version" : 22
+}

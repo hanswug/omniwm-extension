@@ -23,6 +23,22 @@ import Testing
     @Test func missingEverywhere() {
         #expect(OmniWMCtl.locate(homeDirectory: home, environment: [:]) { _ in false } == nil)
     }
+
+    @Test func devBuildPrefersDevBinary() {
+        let found = OmniWMCtl.locate(homeDirectory: home, environment: ["PATH": "/opt/bin"], build: .dev) { _ in true }
+        #expect(found?.path == "/Users/test/Applications/OmniWM Dev.app/Contents/MacOS/omniwmctl")
+    }
+
+    @Test func devBuildFallsBackToReleaseBinary() {
+        let found = OmniWMCtl.locate(homeDirectory: home, environment: [:], build: .dev) { $0 == OmniWMCtl.bundledPath }
+        #expect(found?.path == OmniWMCtl.bundledPath)
+    }
+
+    @Test func runningBuildFollowsDevBundle() {
+        #expect(OmniWMBuild.running(bundleIdentifiers: ["com.apple.Safari", "com.barut.OmniWM"]) == .release)
+        #expect(OmniWMBuild.running(bundleIdentifiers: ["com.barut.OmniWM.dev"]) == .dev)
+        #expect(OmniWMBuild.running(bundleIdentifiers: []) == .release)
+    }
 }
 
 @Suite struct OmniWMCtlRunTests {

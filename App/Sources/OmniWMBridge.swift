@@ -24,6 +24,9 @@ final class OmniWMBridge {
     var containerCountProvider: (() -> Int?)?
 
     private let homeDirectory: URL
+    private var build: OmniWMBuild
+    /// Bumped on every stop, so callbacks from a replaced `omniwmctl` child are ignored.
+    private var generation = 0
     private var working = OmniWMState()
     private var process: LineStreamProcess?
     private var ctl: URL?
@@ -43,8 +46,9 @@ final class OmniWMBridge {
     private static let activePoll: Duration = .milliseconds(500)
     private static let idlePoll: Duration = .milliseconds(1500)
 
-    init(homeDirectory: URL) {
+    init(homeDirectory: URL, build: OmniWMBuild) {
         self.homeDirectory = homeDirectory
+        self.build = build
     }
 
     func start() {
@@ -55,11 +59,24 @@ final class OmniWMBridge {
     /// Kills the child (PDR §5.2: Quit kills it too).
     func stop() {
         stopped = true
+        generation &+= 1
         restartTask?.cancel()
         refreshTask?.cancel()
         pollTask?.cancel()
         process?.terminate()
         process = nil
+    }
+
+    /// The running OmniWM changed (Dev ↔ release, PDR §6.7): reconnect through its `omniwmctl`.
+    func retarget(_ build: OmniWMBuild) {
+        guard build != self.build else { return }
+        self.build = build
+        Log.bridge.info("Switching to \(build.displayName, privacy: .public)")
+        guard !stopped else { return }
+        stop()
+        backoff.reset()
+        markUnreachable()
+        start()
     }
 
     /// Re-query and re-settle now (e.g. settings.toml changed the container count).
@@ -73,11 +90,13 @@ final class OmniWMBridge {
     private func spawn() {
         guard !stopped, process == nil else { return }
         let home = homeDirectory
+        let build = build
+        let generation = generation
         Task { [weak self] in
             let located = await Task.detached {
-                OmniWMCtl.locate(homeDirectory: home, environment: ProcessInfo.processInfo.environment)
+                OmniWMCtl.locate(homeDirectory: home, environment: ProcessInfo.processInfo.environment, build: build)
             }.value
-            guard let self, !stopped, process == nil else { return }
+            guard let self, !stopped, process == nil, generation == self.generation else { return }
             guard let located else {
                 Log.bridge.error("omniwmctl not found")
                 markUnreachable()
@@ -89,15 +108,24 @@ final class OmniWMBridge {
                 executable: located,
                 arguments: ["subscribe", Self.channels, "--reconnect", "--format", "ndjson"],
                 onStdoutLine: { [weak self] line in
-                    // Parse off the main thread; apply on it.
+                    // Parse off the main thread; apply on it. Lines from a replaced child are dropped.
                     let parsed = Result { try OmniWMParser.parseLine(line) }
-                    Task { @MainActor in self?.handle(parsed, raw: line) }
+                    Task { @MainActor in
+                        guard let self, generation == self.generation else { return }
+                        self.handle(parsed, raw: line)
+                    }
                 },
                 onStderrLine: { [weak self] line in
-                    Task { @MainActor in self?.handleStderr(line) }
+                    Task { @MainActor in
+                        guard let self, generation == self.generation else { return }
+                        self.handleStderr(line)
+                    }
                 },
                 onExit: { [weak self] status in
-                    Task { @MainActor in self?.childExited(status) }
+                    Task { @MainActor in
+                        guard let self, generation == self.generation else { return }
+                        self.childExited(status)
+                    }
                 }
             )
             do {

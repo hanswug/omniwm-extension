@@ -128,7 +128,7 @@ On first launch, if the file is missing, write the default below (with comments)
 # OmniWM Extension config — saved changes apply immediately.
 
 [general]
-# Path to OmniWM settings. Empty = auto (${XDG_CONFIG_HOME:-~/.config}/omniwm/settings.toml)
+# Path to OmniWM settings. Empty = auto: the running OmniWM's file (${XDG_CONFIG_HOME:-~/.config}/omniwm/settings.toml, or omniwm-dev/ while OmniWM Dev runs)
 omniwm_settings = ""
 # On the built-in display alone (no external), switch padding to the first preset.
 # When an external display returns, restore what it had before.
@@ -322,6 +322,7 @@ Port the semantics of the existing Perl scripts to Swift, then harden them:
 
 ### 6.7 OmniWM bridge
 - Resolve `omniwmctl`: `/Applications/OmniWM.app/Contents/MacOS/omniwmctl` → `~/Applications/...` → `PATH`.
+- **Follow the running OmniWM (added 2026-11-05, 1.0.3).** While OmniWM Dev (`com.barut.OmniWM.dev`, built with `make run` in an OmniWM checkout) is running, use its `omniwmctl` (`~/Applications/OmniWM Dev.app/Contents/MacOS/omniwmctl`, first in the list above) and its settings (`${XDG_CONFIG_HOME:-~/.config}/omniwm-dev/settings.toml`) when `general.omniwm_settings` is empty. Otherwise use the release. Watch app launches and quits: on a change, reconnect the bridge and re-watch the settings file. An explicit `general.omniwm_settings` always wins. Dev speaks a newer protocol (22); its output is captured in `Fixtures/omniwm-dev/` and must parse like the 0.7.6 fixtures.
 - Spawn: `omniwmctl subscribe active-workspace,layout-changed,display-changed --reconnect --format ndjson`. Parse stdout line by line; ignore unknown kinds/channels; log and skip malformed lines.
 - On the first connect and whenever `display-name` is needed but absent from the event, run `omniwmctl query workspaces --format json` (one-shot, 2 s timeout).
 - Child exits (e.g. IPC disabled, OmniWM not installed) → mark unreachable, retry with backoff 1 s → 2 s → 5 s → 10 s (cap), reset on success.

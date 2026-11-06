@@ -47,12 +47,18 @@ public struct AppPaths: Sendable, Equatable {
         extensionConfigDirectory.appending(path: "config.toml", directoryHint: .notDirectory)
     }
 
+    /// `<configHome>/omniwm-dev/settings.toml` (OmniWM Dev's own settings)
+    public var omniwmDevSettingsURL: URL {
+        configHome.appending(path: "omniwm-dev/settings.toml", directoryHint: .notDirectory)
+    }
+
     /// OmniWM settings to use for `general.omniwm_settings` (PDR §4):
-    /// empty → `omniwmSettingsURL`, `~`/`~/…` → expanded, absolute → as is.
+    /// empty → the running build's file (`omniwmSettingsURL`, or `omniwmDevSettingsURL` for Dev),
+    /// `~`/`~/…` → expanded, absolute → as is.
     /// Relative paths are rejected by `ConfigParser`; here they resolve against home.
-    public func omniwmSettingsURL(configured: String) -> URL {
+    public func omniwmSettingsURL(configured: String, build: OmniWMBuild = .release) -> URL {
         let value = configured.trimmingCharacters(in: .whitespaces)
-        if value.isEmpty { return omniwmSettingsURL }
+        if value.isEmpty { return build == .dev ? omniwmDevSettingsURL : omniwmSettingsURL }
         if value == "~" { return homeDirectory }
         if value.hasPrefix("~/") { return homeDirectory.appending(path: String(value.dropFirst(2)), directoryHint: .notDirectory) }
         if value.hasPrefix("/") { return URL(filePath: value, directoryHint: .notDirectory) }
