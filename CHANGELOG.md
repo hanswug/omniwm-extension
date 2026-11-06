@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `examples/config.toml`: a complete, working config (Hans's own setup, with four padding presets) to copy or paste. It's linked from the README's Configuration section, and a test keeps it valid and covering every default key.
+
 ### Changed
 
 - The repository is public and licensed under GPL-2.0, like OmniWM.

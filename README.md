@@ -71,6 +71,14 @@ The app is self-signed and not notarized, so removing the quarantine attribute i
 
 `${XDG_CONFIG_HOME:-~/.config}/omniwm-extension/config.toml`. `XDG_CONFIG_HOME` is honoured only if it's an absolute path. The file is created with comments on first launch (or via **Edit config file**), and saved changes apply immediately. If the file is invalid, the last good config keeps running and the menu shows the error with its line number.
 
+**Ready-made config:** [`examples/config.toml`](examples/config.toml) is a complete, working setup (Hans's own: four padding presets, including "Wide Comfort"). Copy it into place; this replaces an existing config:
+
+```bash
+mkdir -p ~/.config/omniwm-extension && cp examples/config.toml ~/.config/omniwm-extension/config.toml
+```
+
+Or open it on GitHub and paste its contents into **Edit config file**. All keys:
+
 ```toml
 [general]
 omniwm_settings = ""              # path to OmniWM settings; "" = the running OmniWM's (omniwm/ or omniwm-dev/settings.toml)
