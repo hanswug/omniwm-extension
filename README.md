@@ -1,6 +1,8 @@
 # OmniWM Extension
 
-A small native menu bar app that adds the commands and feedback [OmniWM](https://omniwm.app) is missing for Hans's workflow:
+A small native menu bar app that adds a few commands and at-a-glance feedback to [OmniWM](https://github.com/OmniNull/OmniWM), the tiling window manager for macOS. It works with upstream OmniWM and with [my fork](https://github.com/hanswug/OmniWM). It isn't affiliated with the OmniWM project.
+
+It started as my own replacement for a set of Raycast scripts, so it's shaped around my workflow, but it's configurable:
 
 - **Padding presets.** Cycle or select `[gaps.outer]` presets (Fullscreen / Wide / Single, or your own).
 - **Visible containers 1–5.** Writes `[niri] visibleContainerCount`, then tells OmniWM to Balance Sizes.
@@ -37,9 +39,9 @@ Every build is signed with the same self-signed identity, so Start at login keep
 ### From a GitHub release
 
 ```bash
-gh release download v1.0.0 -R hanswug/omniwm-extension
-unzip OmniWM-Extension-1.0.0.zip
-shasum -a 256 -c OmniWM-Extension-1.0.0.zip.sha256
+gh release download -R hanswug/omniwm-extension   # latest release
+unzip OmniWM-Extension-*.zip
+shasum -a 256 -c OmniWM-Extension-*.zip.sha256
 xattr -dr com.apple.quarantine "OmniWM Extension.app"
 mv "OmniWM Extension.app" /Applications/
 open "/Applications/OmniWM Extension.app"
@@ -167,6 +169,6 @@ make release VERSION=x.y.z   # see docs/PDR.md §7.3
 - Only dependency: TOMLKit, pinned at exactly 0.6.0.
 - Parsers are written against captured fixtures in `Packages/Core/Tests/CoreTests/Fixtures/`: a copy of the real `settings.toml` and `omniwmctl` output (see its README). Re-capture them after OmniWM updates.
 
-## License note
+## License
 
-Private, personal build. The app and menu bar icons are derived from OmniWM's icon (OmniWM is GPL-2.0). Revisit before publishing this repository.
+GPL-2.0, like OmniWM. See [LICENSE](LICENSE). The app and menu bar icons are derived from OmniWM's icon, used under OmniWM's GPL-2.0 license.
