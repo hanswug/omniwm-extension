@@ -18,7 +18,7 @@ The spec is [`docs/PDR.md`](docs/PDR.md). Changes are listed in [`CHANGELOG.md`]
 ## Requirements
 
 - macOS 26.0+ on Apple Silicon.
-- OmniWM at `/Applications/OmniWM.app` with **IPC enabled** (`general.ipcEnabled = true`). Tested with OmniWM 0.7.6 (protocol 19).
+- OmniWM at `/Applications/OmniWM.app` with **IPC enabled** (`general.ipcEnabled = true`). Tested with OmniWM 0.7.6 (protocol 19) and OmniWM Dev built from upstream `main` (protocol 22).
 - **Building only:** Xcode 27, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), `gh` for releases.
 
 The app needs **no** Accessibility, Input Monitoring or other privacy permissions. Hotkeys use Carbon `RegisterEventHotKey`.
@@ -71,7 +71,7 @@ The app is self-signed and not notarized, so removing the quarantine attribute i
 
 ```toml
 [general]
-omniwm_settings = ""              # path to OmniWM settings; "" = ${XDG_CONFIG_HOME:-~/.config}/omniwm/settings.toml
+omniwm_settings = ""              # path to OmniWM settings; "" = the running OmniWM's (omniwm/ or omniwm-dev/settings.toml)
 auto_fullscreen_on_builtin = true # built-in display alone → first preset; restore when docked again
 balance_sizes_delay_ms = 120      # wait before Balance Sizes after a visible-containers change
 
@@ -100,7 +100,7 @@ right = 8
 
 | Key | Type | Default | Rules |
 |---|---|---|---|
-| `general.omniwm_settings` | string | `""` | empty, absolute, or `~/…` |
+| `general.omniwm_settings` | string | `""` | empty (follow the running OmniWM), absolute, or `~/…` |
 | `general.auto_fullscreen_on_builtin` | bool | `true` | |
 | `general.balance_sizes_delay_ms` | number | `120` | clamped 0–2000 (warning) |
 | `hud.enabled` | bool | `true` | |
@@ -125,6 +125,7 @@ right = 8
   - If OmniWM changes the file at the same moment, the app re-reads and re-applies once, then reports an error rather than overwriting OmniWM's change.
   - A change to a value that's already set doesn't write.
 - **Per-monitor overrides.** The app writes only global values. If `monitorGapOverrides` or `monitorNiriOverrides` masks a change on the current display, the HUD says so and the menu shows ⓘ.
+- **Release or Dev.** The app talks to whichever OmniWM is running. While OmniWM Dev (`make run` in an OmniWM checkout) runs, it uses Dev's own `omniwmctl` and `~/.config/omniwm-dev/settings.toml`, and switches back when Dev quits. An explicit `omniwm_settings` path always wins.
 - **State from IPC.** A long-lived `omniwmctl subscribe` child process provides live state. It restarts with backoff 1 → 2 → 5 → 10 s and is killed when the app quits.
 - **Inferred toggles.** OmniWM's IPC has no command events, so its toggles are recognised from state changes. Leaving fullscreen emits no event at all, so the focused window is also polled: every 0.5 s while `F`/`FC` is shown, otherwise every 1.5 s, each poll taking a few milliseconds.
 - **Display state** is kept in `~/Library/Application Support/com.omniwm.extension/state.json` (`lastTopology`, `lastExternalGaps`).

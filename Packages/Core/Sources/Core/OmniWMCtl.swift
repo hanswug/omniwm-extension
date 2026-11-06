@@ -5,13 +5,18 @@ import Synchronization
 public enum OmniWMCtl {
     public static let bundledPath = "/Applications/OmniWM.app/Contents/MacOS/omniwmctl"
 
-    /// `/Applications/…` → `~/Applications/…` → `PATH` (PDR §6.7).
+    /// `~/Applications/OmniWM Dev.app/…` (Dev only) → `/Applications/…` → `~/Applications/…` → `PATH` (PDR §6.7).
     public static func locate(
         homeDirectory: URL,
         environment: [String: String],
+        build: OmniWMBuild = .release,
         isExecutable: (String) -> Bool = { FileManager.default.isExecutableFile(atPath: $0) }
     ) -> URL? {
-        var candidates = [
+        var candidates: [String] = []
+        if build == .dev {
+            candidates.append(homeDirectory.appending(path: "Applications/OmniWM Dev.app/Contents/MacOS/omniwmctl").path)
+        }
+        candidates += [
             bundledPath,
             homeDirectory.appending(path: "Applications/OmniWM.app/Contents/MacOS/omniwmctl").path,
         ]

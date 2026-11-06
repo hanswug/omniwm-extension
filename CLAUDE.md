@@ -64,6 +64,6 @@ log stream --predicate 'subsystem == "com.omniwm.extension"'   # live logs
 - OmniWM settings: `${XDG_CONFIG_HOME:-~/.config}/omniwm/settings.toml`
 - Extension config: `${XDG_CONFIG_HOME:-~/.config}/omniwm-extension/config.toml`
 - App state: `~/Library/Application Support/com.omniwm.extension/state.json`
-- `omniwmctl`: `/Applications/OmniWM.app/Contents/MacOS/omniwmctl`
+- `omniwmctl`: `/Applications/OmniWM.app/Contents/MacOS/omniwmctl`; while OmniWM Dev runs, `~/Applications/OmniWM Dev.app/Contents/MacOS/omniwmctl` with settings in `~/.config/omniwm-dev/settings.toml` (PDR §6.7)
 - Signing identity: `OmniWM Extension Self-Signed`
 - Repo: `hanswug/omniwm-extension` (private). Target macOS 26.0+ (work Mac runs 26.x).

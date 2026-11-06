@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The app follows whichever OmniWM is running. While OmniWM Dev (built with `make run` in an OmniWM checkout) runs, it uses Dev's own `omniwmctl` and `~/.config/omniwm-dev/settings.toml`, so padding, visible containers, borders, Balance Sizes and the live menu bar work with Dev. When Dev quits, it switches back to the release. An explicit `general.omniwm_settings` still wins.
+
+### Fixed
+- With OmniWM Dev running, every `omniwmctl` call failed with a protocol mismatch, because the release's `omniwmctl` was always used, and settings edits went to the release's file.
+
 ## [1.0.2] - 2026-11-05
 
 ### Fixed

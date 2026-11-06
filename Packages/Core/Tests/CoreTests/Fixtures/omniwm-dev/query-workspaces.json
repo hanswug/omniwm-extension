@@ -1,0 +1,120 @@
+{
+  "id" : "DE167953-50D8-44D2-8FBD-561768BE7FCE",
+  "kind" : "query",
+  "ok" : true,
+  "result" : {
+    "kind" : "workspaces",
+    "payload" : {
+      "workspaces" : [
+        {
+          "columns" : [
+            {
+              "index" : 1,
+              "mode" : "normal",
+              "viewport" : "intersecting"
+            },
+            {
+              "index" : 2,
+              "mode" : "normal",
+              "viewport" : "intersecting"
+            }
+          ],
+          "counts" : {
+            "floating" : 1,
+            "scratchpad" : 0,
+            "tiled" : 2,
+            "total" : 3
+          },
+          "display" : {
+            "id" : "display:2",
+            "isMain" : true,
+            "name" : "Odyssey Ark"
+          },
+          "displayName" : "1",
+          "focusedWindowId" : "ow_OEE1Q0ZCRjktMjY0Qi00NkM3LUFBRTAtRkZBODI5ODI5MjY3OjMzNjkyOjc2MTQ",
+          "id" : "12EF3B64-1AAC-448D-B6A3-4BABA5ABEFC3",
+          "isCurrent" : true,
+          "isFocused" : true,
+          "isVisible" : true,
+          "layout" : "niri",
+          "number" : 1,
+          "rawName" : "1"
+        },
+        {
+          "columns" : [
+
+          ],
+          "counts" : {
+            "floating" : 0,
+            "scratchpad" : 0,
+            "tiled" : 0,
+            "total" : 0
+          },
+          "display" : {
+            "id" : "display:2",
+            "isMain" : true,
+            "name" : "Odyssey Ark"
+          },
+          "displayName" : "2",
+          "id" : "22F8B5DA-34E3-4720-82B3-D5315E5FE91D",
+          "isCurrent" : false,
+          "isFocused" : false,
+          "isVisible" : false,
+          "layout" : "niri",
+          "number" : 2,
+          "rawName" : "2"
+        },
+        {
+          "columns" : [
+
+          ],
+          "counts" : {
+            "floating" : 0,
+            "scratchpad" : 0,
+            "tiled" : 0,
+            "total" : 0
+          },
+          "display" : {
+            "id" : "display:2",
+            "isMain" : true,
+            "name" : "Odyssey Ark"
+          },
+          "displayName" : "3",
+          "id" : "5E27822E-5999-4BEB-8968-08F083D9F835",
+          "isCurrent" : false,
+          "isFocused" : false,
+          "isVisible" : false,
+          "layout" : "niri",
+          "number" : 3,
+          "rawName" : "3"
+        },
+        {
+          "columns" : [
+
+          ],
+          "counts" : {
+            "floating" : 0,
+            "scratchpad" : 0,
+            "tiled" : 0,
+            "total" : 0
+          },
+          "display" : {
+            "id" : "display:2",
+            "isMain" : true,
+            "name" : "Odyssey Ark"
+          },
+          "displayName" : "4",
+          "id" : "5EE347E0-DEBE-4196-81F2-8F58E50B3A8F",
+          "isCurrent" : false,
+          "isFocused" : false,
+          "isVisible" : false,
+          "layout" : "niri",
+          "number" : 4,
+          "rawName" : "4"
+        }
+      ]
+    }
+  },
+  "status" : "success",
+  "version" : 22
+}

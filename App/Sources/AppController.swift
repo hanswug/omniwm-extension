@@ -12,6 +12,7 @@ final class AppController {
     private let hotkeys = HotkeyManager()
     private let hud = HUDController()
     private let displays = DisplayMonitor()
+    private let omniwmBuild = OmniWMBuildMonitor()
     let bridge: OmniWMBridge
     /// The status item title should be redrawn (OmniWM state, borders, config).
     var onStatusChange: (() -> Void)?
@@ -25,7 +26,7 @@ final class AppController {
     init(paths: AppPaths) {
         self.paths = paths
         config = ConfigController(url: paths.extensionConfigURL)
-        bridge = OmniWMBridge(homeDirectory: paths.homeDirectory)
+        bridge = OmniWMBridge(homeDirectory: paths.homeDirectory, build: omniwmBuild.build)
 
         config.onChange = { [weak self] outcome in
             guard let self else { return }
@@ -56,9 +57,15 @@ final class AppController {
             Log.hotkeys.info("Hotkey \(registration.hotkey.description, privacy: .public) → \(registration.action.description, privacy: .public)")
             self?.run(Command(registration.action))
         }
+        omniwmBuild.onChange = { [weak self] build in
+            guard let self else { return }
+            bridge.retarget(build)
+            configChanged()
+        }
     }
 
     func start() {
+        omniwmBuild.start()
         config.start()
         bridge.start()
         displays.start()
@@ -265,7 +272,7 @@ final class AppController {
     }
 
     private func configChanged() {
-        settings.watch(paths.omniwmSettingsURL(configured: config.config.general.omniwmSettings))
+        settings.watch(paths.omniwmSettingsURL(configured: config.config.general.omniwmSettings, build: omniwmBuild.build))
         updateHotkeys()
         onStatusChange?()
     }
@@ -291,9 +298,14 @@ final class AppController {
     /// Failure is logged only: the settings write itself succeeded.
     private func runFollowUp(_ arguments: [String], after delay: Duration) async {
         let home = paths.homeDirectory
+        let build = omniwmBuild.build
         let output = await Task.detached { () -> OmniWMCtl.Output? in
             try? await Task.sleep(for: delay)
-            guard let ctl = OmniWMCtl.locate(homeDirectory: home, environment: ProcessInfo.processInfo.environment) else {
+            guard let ctl = OmniWMCtl.locate(
+                homeDirectory: home,
+                environment: ProcessInfo.processInfo.environment,
+                build: build
+            ) else {
                 return nil
             }
             return await OmniWMCtl.run(ctl, arguments)

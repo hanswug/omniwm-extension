@@ -84,7 +84,7 @@ public extension ExtConfig {
     # OmniWM Extension config — saved changes apply immediately.
 
     [general]
-    # Path to OmniWM settings. Empty = auto (${XDG_CONFIG_HOME:-~/.config}/omniwm/settings.toml)
+    # Path to OmniWM settings. Empty = auto: the running OmniWM's file (${XDG_CONFIG_HOME:-~/.config}/omniwm/settings.toml, or omniwm-dev/ while OmniWM Dev runs)
     omniwm_settings = ""
     # On the built-in display alone (no external), switch padding to the first preset.
     # When an external display returns, restore what it had before.

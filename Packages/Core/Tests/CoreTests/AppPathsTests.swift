@@ -41,4 +41,12 @@ import Testing
         #expect(paths.omniwmSettingsURL(configured: "~/dot/omniwm.toml").path == "/Users/test/dot/omniwm.toml")
         #expect(paths.omniwmSettingsURL(configured: "/etc/omniwm.toml").path == "/etc/omniwm.toml")
     }
+
+    @Test func devBuildUsesDevSettingsUnlessConfigured() {
+        let paths = AppPaths(environment: [:], homeDirectory: home)
+        #expect(paths.omniwmSettingsURL(configured: "", build: .dev).path == "/Users/test/.config/omniwm-dev/settings.toml")
+        #expect(paths.omniwmSettingsURL(configured: "/etc/omniwm.toml", build: .dev).path == "/etc/omniwm.toml")
+        let xdg = AppPaths(environment: ["XDG_CONFIG_HOME": "/tmp/xdg"], homeDirectory: home)
+        #expect(xdg.omniwmDevSettingsURL.path == "/tmp/xdg/omniwm-dev/settings.toml")
+    }
 }
