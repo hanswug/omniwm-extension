@@ -67,9 +67,11 @@ public struct CommandOutcome: Sendable, Equatable {
     ///
     /// OmniWM reloads `visibleContainerCount` from the file but only re-lays out
     /// existing columns after a Balance Sizes, so a written count change is followed by one.
-    public var followUp: [String]? {
-        if case .containersSet = result, wroteSettings { return ["command", "balance-sizes"] }
-        return nil
+    /// OmniWM Dev (Hans's fork) re-lays out by itself when the count changes, using its own
+    /// `niri.visibleContainerChangeAction` (Balance Sizes or Reset Layout), so it gets none (PDR §6.3).
+    public func followUp(for build: OmniWMBuild) -> [String]? {
+        guard case .containersSet = result, wroteSettings, build == .release else { return nil }
+        return ["command", "balance-sizes"]
     }
 }
 

@@ -188,7 +188,7 @@ final class AppController {
             lastCommandError = nil
             Log.settings.info("\(command.description, privacy: .public) → \(String(describing: outcome.result), privacy: .public)")
             showHUD(isMaskedByOverride(outcome.result) ? .maskedByOverride : message(outcome.result))
-            if let followUp = outcome.followUp {
+            if let followUp = outcome.followUp(for: omniwmBuild.build) {
                 await runFollowUp(followUp, after: reloadDelay)
             }
             return outcome.result

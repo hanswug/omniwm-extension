@@ -302,6 +302,7 @@ Port the semantics of the existing Perl scripts to Swift, then harden them:
 - If OmniWM isn't reachable (layout unknown): apply the change and show the normal HUD.
 - If N already equals the current count: no write, show the HUD anyway (confirmation).
 - After a count change is written, wait `general.balance_sizes_delay_ms` (default 120 ms; OmniWM 0.7.6 reloads ~80 ms after a write) for OmniWM's live reload, then run `omniwmctl command balance-sizes` (resolved per §6.7, 2 s timeout, off the main thread). No write → no Balance Sizes. A failed Balance Sizes is logged; the write itself stands.
+- **With OmniWM Dev (added 2026-11-06, 1.0.4):** run no follow-up. Hans's fork re-lays out by itself when it reloads a changed count, using its `niri.visibleContainerChangeAction` setting (Balance Sizes by default, or Reset Layout, which fills the view when there are fewer columns than the count). A follow-up would override that choice.
 
 ### 6.4 Borders
 - `toggle_borders` flips `[borders] enabled` → HUD.
